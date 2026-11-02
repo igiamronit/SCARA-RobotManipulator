@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="480" viewBox="0 0 900 480">
+<defs><marker id="blueArrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7" fill="none" stroke="#3566a3" stroke-width="1.2"/></marker></defs>
+<rect width="900" height="480" fill="white"/>
+<path d="M 194.0 401.0 A 16 5 0 0 1 226.0 401.0 L 226.0 427.0 A 16 5 0 0 1 194.0 427.0 Z" fill="white" stroke="#242424" stroke-width="1.6"/>
+<ellipse cx="210.0" cy="401.0" rx="16" ry="5" fill="white" stroke="#242424" stroke-width="1.6"/>
+<line x1="210.0" y1="397.0" x2="210.0" y2="206.0" stroke="#242424" stroke-width="1.7" fill="none"/>
+<line x1="210.0" y1="206.0" x2="402.0" y2="206.0" stroke="#242424" stroke-width="2" fill="none"/>
+<line x1="402.0" y1="206.0" x2="539.5" y2="160.2" stroke="#242424" stroke-width="2" fill="none"/>
+<path d="M 388.0 195.0 A 14 5 0 0 1 416.0 195.0 L 416.0 217.0 A 14 5 0 0 1 388.0 217.0 Z" fill="white" stroke="#242424" stroke-width="1.6"/>
+<ellipse cx="402.0" cy="195.0" rx="14" ry="5" fill="white" stroke="#242424" stroke-width="1.6"/>
+<path d="M 522.5 155.2 L 549.5 148.2 L 561.5 157.2 L 534.5 164.2 Z M 522.5 155.2 L 522.5 177.2 L 534.5 185.2 L 534.5 164.2 M 534.5 185.2 L 561.5 177.2 L 561.5 157.2" fill="white" stroke="#242424" stroke-width="1.5"/>
+<line x1="539.5" y1="184.2" x2="539.5" y2="255.2" stroke="#242424" stroke-width="1.7" fill="none"/>
+<path d="M 526.5 257.2 A 13 5 0 0 1 552.5 257.2 L 552.5 279.2 A 13 5 0 0 1 526.5 279.2 Z" fill="white" stroke="#242424" stroke-width="1.6"/>
+<ellipse cx="539.5" cy="257.2" rx="13" ry="5" fill="white" stroke="#242424" stroke-width="1.6"/>
+<line x1="539.5" y1="280.2" x2="539.5" y2="328.2" stroke="#242424" stroke-width="1.7" fill="none"/>
+<line x1="599.5" y1="172.2" x2="599.5" y2="268.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<line x1="594.5" y1="172.2" x2="604.5" y2="172.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<line x1="594.5" y1="268.2" x2="604.5" y2="268.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<text x="608.5" y="225.2" font-family="Times New Roman, serif" font-size="17" fill="#285c98">d₃</text>
+<line x1="622.5" y1="268.2" x2="622.5" y2="328.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<line x1="617.5" y1="268.2" x2="627.5" y2="268.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<line x1="617.5" y1="328.2" x2="627.5" y2="328.2" stroke="#3566a3" stroke-width="1.2" fill="none"/>
+<text x="631.5" y="303.2" font-family="Times New Roman, serif" font-size="17" fill="#285c98">d₄</text>
+<line x1="210.0" y1="206.0" x2="243.6" y2="206.0" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="248.6" y="202.0" font-family="Times New Roman, serif" font-size="15" fill="#285c98">x₀</text>
+<line x1="210.0" y1="206.0" x2="221.8" y2="190.9" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="226.8" y="186.9" font-family="Times New Roman, serif" font-size="15" fill="#285c98">y₀</text>
+<line x1="210.0" y1="206.0" x2="210.0" y2="172.4" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="215.0" y="168.4" font-family="Times New Roman, serif" font-size="15" fill="#285c98">z₀</text>
+<line x1="402.0" y1="206.0" x2="435.6" y2="206.0" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="440.6" y="202.0" font-family="Times New Roman, serif" font-size="15" fill="#285c98">x₁</text>
+<line x1="402.0" y1="206.0" x2="413.8" y2="190.9" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="418.8" y="186.9" font-family="Times New Roman, serif" font-size="15" fill="#285c98">y₁</text>
+<line x1="402.0" y1="206.0" x2="402.0" y2="172.4" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="407.0" y="168.4" font-family="Times New Roman, serif" font-size="15" fill="#285c98">z₁</text>
+<line x1="539.5" y1="160.2" x2="571.5" y2="149.5" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="576.5" y="145.5" font-family="Times New Roman, serif" font-size="15" fill="#285c98">x₂</text>
+<line x1="539.5" y1="160.2" x2="554.9" y2="170.9" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="559.9" y="187.9" font-family="Times New Roman, serif" font-size="15" fill="#285c98">y₂</text>
+<line x1="539.5" y1="160.2" x2="539.5" y2="193.8" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="520.5" y="210.8" font-family="Times New Roman, serif" font-size="15" fill="#285c98">z₂</text>
+<line x1="539.5" y1="268.2" x2="571.5" y2="257.5" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="576.5" y="253.5" font-family="Times New Roman, serif" font-size="15" fill="#285c98">x₃</text>
+<line x1="539.5" y1="268.2" x2="554.9" y2="278.9" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="559.9" y="295.9" font-family="Times New Roman, serif" font-size="15" fill="#285c98">y₃</text>
+<line x1="539.5" y1="268.2" x2="539.5" y2="301.8" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="544.5" y="318.8" font-family="Times New Roman, serif" font-size="15" fill="#285c98">z₃</text>
+<line x1="539.5" y1="328.2" x2="571.5" y2="317.5" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="576.5" y="313.5" font-family="Times New Roman, serif" font-size="15" fill="#285c98">x₄</text>
+<line x1="539.5" y1="328.2" x2="554.9" y2="338.9" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="559.9" y="355.9" font-family="Times New Roman, serif" font-size="15" fill="#285c98">y₄</text>
+<line x1="539.5" y1="328.2" x2="539.5" y2="361.8" stroke="#3566a3" stroke-width="1.4" fill="none" marker-end="url(#blueArrow)"/>
+<text x="521.5" y="378.8" font-family="Times New Roman, serif" font-size="15" fill="#285c98">z₄</text>
+<text x="222.0" y="282.0" font-family="Times New Roman, serif" font-size="17" fill="#285c98">θ₁</text>
+<text x="409.0" y="273.0" font-family="Times New Roman, serif" font-size="17" fill="#285c98">θ₂</text>
+<text x="561.5" y="278.2" font-family="Times New Roman, serif" font-size="17" fill="#285c98">θ₄</text>
+</svg>

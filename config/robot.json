@@ -1,0 +1,42 @@
+{
+  "name": "class_scara_rrpr",
+  "units": "SI: m, kg, s, rad, N, Nm",
+  "source": "Project design values; the lecture slides specify topology and DH pattern, not dimensions or limits.",
+  "base_height_m": 0.28,
+  "a1_m": 0.24,
+  "a2_m": 0.18,
+  "d3_min_m": 0.08,
+  "d3_max_m": 0.19,
+  "d4_m": 0.075,
+  "shoulder_limit_deg": [-150, 150],
+  "elbow_limit_deg": [-145, 145],
+  "wrist_limit_deg": [-180, 180],
+  "finger_travel_m": 0.018,
+  "finger_home_offset_m": 0.029,
+  "finger_width_m": 0.012,
+  "finger_depth_m": 0.014,
+  "finger_length_m": 0.05,
+  "gravity_m_s2": 9.81,
+  "mass_kg": {
+    "upper_arm": 1.1,
+    "forearm": 0.75,
+    "vertical_carriage": 0.30,
+    "wrist_and_palm": 0.22,
+    "each_finger": 0.04
+  },
+  "effort_limit": {
+    "shoulder_Nm": 12,
+    "elbow_Nm": 8,
+    "vertical_N": 80,
+    "wrist_Nm": 2,
+    "each_finger_N": 8
+  },
+  "velocity_limit": {
+    "shoulder_rad_s": 6,
+    "elbow_rad_s": 8,
+    "vertical_m_s": 0.8,
+    "wrist_rad_s": 12,
+    "each_finger_m_s": 0.25
+  },
+  "note": "All masses, efforts, and joint limits are provisional educational choices, not hardware ratings or proof of one cycle per second."
+}

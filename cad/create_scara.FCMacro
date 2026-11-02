@@ -1,0 +1,78 @@
+"""Run in FreeCAD: creates editable FCStd parts and a STEP assembly at the zero pose.
+
+The project dimensions are read from ../config/robot.json. MuJoCo and URDF
+files are produced separately by scripts/model/build.py from the same JSON source.
+"""
+
+import json
+from pathlib import Path
+
+import FreeCAD as App
+import FreeCADGui as Gui
+import Part
+
+
+try:
+    ROOT = Path(__file__).resolve().parents[1]
+except NameError:
+    ROOT = Path.cwd()
+P = json.loads((ROOT / "config" / "robot.json").read_text(encoding="utf-8"))
+OUT = ROOT / "cad"
+OUT.mkdir(exist_ok=True)
+
+# FreeCAD geometry uses millimetres; the shared project parameters use metres.
+mm = lambda metres: metres * 1000.0
+
+
+def cube(x, y, z, cx=0, cy=0, cz=0):
+    return Part.makeBox(mm(x), mm(y), mm(z),
+                        App.Vector(mm(cx-x/2), mm(cy-y/2), mm(cz-z/2)))
+
+
+def cyl(r, h, cx=0, cy=0, cz=0):
+    return Part.makeCylinder(mm(r), mm(h),
+                             App.Vector(mm(cx), mm(cy), mm(cz-h/2)))
+
+
+doc = App.newDocument("ClassSCARA")
+parts = []
+
+
+def add(name, shape, x=0, y=0, z=0, color=(0.25, 0.45, 0.72)):
+    obj = doc.addObject("Part::Feature", name)
+    obj.Label = name.replace("_", " ").title()
+    obj.Shape = shape
+    obj.Placement.Base = App.Vector(mm(x), mm(y), mm(z))
+    obj.ViewObject.ShapeColor = color
+    obj.addProperty("App::PropertyString", "Source", "Project")
+    obj.Source = "config/robot.json and cad/create_scara.FCMacro"
+    parts.append(obj)
+
+
+h = P["base_height_m"]
+a1, a2 = P["a1_m"], P["a2_m"]
+d3 = P["d3_min_m"]
+add("base_plate", cube(.16,.16,.018,cz=.009), color=(.15,.20,.28))
+add("pedestal", cyl(.055,h-.018,cz=(h+.018)/2), color=(.22,.29,.38))
+add("shoulder_hub", cyl(.046,.05), z=h, color=(.88,.40,.12))
+add("upper_arm", cube(a1,.067,.044,cx=a1/2), z=h)
+add("elbow_hub", cyl(.038,.046), x=a1,z=h,color=(.88,.40,.12))
+add("forearm", cube(a2,.056,.038,cx=a2/2),x=a1,z=h,color=(.24,.56,.80))
+add("slide_shaft", cyl(.012,.19,cz=.01),x=a1+a2,z=h,color=(.65,.69,.73))
+add("wrist_hub", cyl(.029,.024,cz=-.012),x=a1+a2,z=h-d3,color=(.88,.40,.12))
+add("palm", cube(.065,.092,.022,cz=-.045),x=a1+a2,z=h-d3,color=(.18,.24,.32))
+for side in ("left", "right"):
+    sign = 1 if side == "left" else -1
+    add(side+"_finger",
+        cube(P["finger_width_m"],P["finger_depth_m"],P["finger_length_m"],cz=-.02),
+        x=a1+a2,y=sign*P["finger_home_offset_m"],z=h-d3-.035,
+        color=(.28,.34,.40))
+
+doc.recompute()
+if getattr(App, "GuiUp", False):
+    Gui.activeDocument().activeView().viewAxonometric()
+    Gui.activeDocument().activeView().fitAll()
+    doc.recompute()
+doc.saveAs(str(OUT / "scara.FCStd"))
+Part.export(parts, str(OUT / "scara_zero_pose.step"))
+print("Saved cad/scara.FCStd and cad/scara_zero_pose.step")
