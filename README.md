@@ -8,11 +8,11 @@ This is a computer-only SCARA robot project built for MuJoCo. The robot has two 
 
 ## Project checklist
 
-- [x] 1. Model making: CAD, STL, URDF, and MuJoCo model files are created.
-- [x] 2. Frame assignment + DH table: [Frame assignment](figures/frame_assignment.png) and [DH table](figures/dh_table.png) are ready.
-- [ ] 3. Forward kinematics
-- [ ] 4. Velocity kinematics
-- [ ] 5. Forward dynamics
-- [ ] 6. Inverse of 3-5
-- [ ] 7. Controllability
-- [ ] 8. Add real life objects*
+- [x] 1. Define the robot geometry, joint limits, masses, frames, and sign conventions.
+- [x] 2. Build the model and assign frames/DH parameters.
+- [ ] 3. Derive forward and inverse kinematics, including unreachable targets.
+- [ ] 4. Derive velocity kinematics (the Jacobian), and identify singularities.
+- [ ] 5. Derive forward and inverse dynamics from the robot’s energies.
+- [ ] 6. Plan a timed path, then control the actuators to track it.
+- [ ] 7. Add a simulated task: objects, grasp/release, and collision constraints.
+- [ ] 8. Validate the equations and measure task results: tracking error, placement accuracy, effort, failures, and cycle time.
