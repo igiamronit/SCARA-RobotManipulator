@@ -1,0 +1,2 @@
+# Notebook kernel only; the model dependencies are in ../requirements.txt.
+ipykernel==7.4.0
