@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from inverse_velocity import inverse_velocity
 from scara_kinematics import (JointLimitError, UnreachableTargetError, forward_kinematics,
                               forward_transform, inverse_kinematics, is_singular,
                               spatial_jacobian, task_jacobian, wrap_to_pi, PARAMETERS)
@@ -86,6 +87,8 @@ rotation_rate = ((plus_transform[:3, :3] - minus_transform[:3, :3]) / (2 * step)
                  center_transform[:3, :3].T)
 numeric_angular = np.array([rotation_rate[2, 1], rotation_rate[0, 2], rotation_rate[1, 0]])
 assert np.allclose(spatial @ qdot, np.r_[numeric_linear, numeric_angular], atol=1e-7)
+assert np.allclose(inverse_velocity(analytic @ qdot, q), qdot, atol=1e-12)
+assert_raises(ValueError, inverse_velocity, [0.1, 0.0, 0.0, 0.0], [0, 0, 0.04, 0])
 
 assert is_singular([0, 0, 0.04, 0])
 assert is_singular([0, math.pi, 0.04, 0])
@@ -109,4 +112,5 @@ assert_raises(JointLimitError, inverse_kinematics, outside_shoulder_limit)
 
 print("PASS: FK/IK covers both elbow branches, workspace boundaries, unreachable targets, and limits.")
 print("PASS: DH-product transform orientation, task Jacobian, and 6x4 spatial Jacobian agree numerically.")
+print("PASS: inverse velocity recovers joint rates and rejects singular configurations.")
 print("PASS: singular configurations detected at sin(q2)=0.")
