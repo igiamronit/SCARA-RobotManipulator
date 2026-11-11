@@ -67,6 +67,11 @@ The arm is singular when $a_1a_2\sin q_2=0$, i.e. at $q_2=0$ or $q_2=\pi$
 (subject to joint limits).  `spatial_jacobian` provides the matching 6x4
 geometric Jacobian when linear and angular velocities are needed separately.
 
+`inverse_velocity.py` supplies the inverse differential relation for a
+non-singular pose: $\dot q=J(q)^{-1}[\dot x,\dot y,\dot z,\dot\phi]^T$.  It
+raises an error at singular configurations rather than returning unreliable
+joint velocities.
+
 ## Run the checks
 
 ```powershell
