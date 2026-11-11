@@ -66,6 +66,15 @@ have slips, which the code does not repeat:
 - $J_{\omega_4}$ has a third row of $[1,1,0,-1]$, matching $\omega_4=\dot\theta_1+\dot\theta_2-\dot\theta_4$.
 - In the first line for $K_\omega$, the factor $(I_1+I_2)$ should be $(I_2+I_3)$, as written in $K_{total}$.
 
+## Notebook and viewers
+
+[notebooks/SCARA_Dynamics_MuJoCo.ipynb](../notebooks/SCARA_Dynamics_MuJoCo.ipynb)
+walks through the derivation step by step and checks each result against MuJoCo.
+Its last cell opens an interactive viewer. In it you set joint efforts with the
+keyboard. MuJoCo simulates the robot while a green ghost shows the motion our
+equations predict. `scripts/dynamics/view_dynamics.py` provides the same comparison as a
+command-line script.
+
 ## Run the checks
 
 ```powershell
