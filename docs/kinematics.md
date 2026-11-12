@@ -69,8 +69,47 @@ geometric Jacobian when linear and angular velocities are needed separately.
 
 `inverse_velocity.py` supplies the inverse differential relation for a
 non-singular pose: $\dot q=J(q)^{-1}[\dot x,\dot y,\dot z,\dot\phi]^T$.  It
-raises an error at singular configurations rather than returning unreliable
-joint velocities.
+raises an error at or near singular configurations rather than returning
+unreliable joint velocities.  "Near" means $|\sin q_2|\le 0.05$ (about
+2.9°): the smallest singular value of $J$ is roughly $0.085|\sin q_2|$ here,
+so closer than that, $J^{-1}$ needs very large joint rates for small Cartesian
+rates.  The physically reachable singularity is $q_2=0$ (arm fully extended,
+including the home pose); $q_2=\pi$ lies outside the ±145° elbow limit.
+
+Note that the joint limits shrink the reachable annulus: with $|q_2|\le145°$
+the inner radius is about 0.139 m, not $|a_1-a_2|=0.06$ m, and the ±150°
+shoulder limit leaves a 60° wedge behind the base unreachable.  The IK raises
+`JointLimitError` for such targets.
+
+## Damped least squares (optional alternative)
+
+`inverse_velocity_dls` and `inverse_kinematics_numerical` use adaptive damped
+least squares:
+
+$$
+\dot q = J^T\left(JJ^T+\lambda^2 I\right)^{-1}\dot x,\qquad
+\lambda^2=\begin{cases}0,&\sigma_{\min}\ge\varepsilon\\
+\lambda_{\max}^2\left(1-(\sigma_{\min}/\varepsilon)^2\right),&\sigma_{\min}<\varepsilon\end{cases}
+$$
+
+with $\varepsilon=0.01$ and $\lambda_{\max}=0.01$.  Away from singularities
+this is exactly $J^{-1}$; near them it keeps joint rates bounded and drops the
+radial velocity component the arm cannot produce.
+
+`inverse_kinematics_numerical` iterates $q_{k+1}=q_k+\Delta q_k$ with the DLS
+step on the pose error $e=x_d-f(q_k)$ (yaw error wrapped to $[-\pi,\pi)$).
+The damping is also capped at $\lVert e\rVert$, so the final steps behave like
+Newton's method.  Practical points:
+
+- At the home pose ($q_2=0$) the arm cannot move radially to first order, so a
+  singular starting guess is nudged by 0.3 rad in $q_2$ first.
+- Steps are limited to 0.5 rad (or m) and projected back inside the joint limits.
+- It returns one branch only.  If the path from the guess runs into a joint
+  limit, it retries from guesses pointed at the target, one per elbow branch.
+
+The closed form remains the default: it is exact, lists both branches, and
+reports unreachable targets directly.  The numerical solver is kept for
+comparison or for extensions without a closed-form solution.
 
 ## Run the checks
 

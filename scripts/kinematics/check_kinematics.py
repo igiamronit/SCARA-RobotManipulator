@@ -9,9 +9,10 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from inverse_velocity import inverse_velocity
-from scara_kinematics import (JointLimitError, UnreachableTargetError, forward_kinematics,
-                              forward_transform, inverse_kinematics, is_singular,
+from inverse_velocity import inverse_velocity, inverse_velocity_dls
+from scara_kinematics import (ConvergenceError, JointLimitError, UnreachableTargetError,
+                              forward_kinematics, forward_transform, inverse_kinematics,
+                              inverse_kinematics_numerical, is_singular,
                               spatial_jacobian, task_jacobian, wrap_to_pi, PARAMETERS)
 
 
@@ -93,6 +94,15 @@ assert_raises(ValueError, inverse_velocity, [0.1, 0.0, 0.0, 0.0], [0, 0, 0.04, 0
 assert is_singular([0, 0, 0.04, 0])
 assert is_singular([0, math.pi, 0.04, 0])
 assert not is_singular(samples[0])
+assert is_singular([0, 0.01, 0.04, 0])   # near-singular counts too, not only exactly 0
+assert not is_singular([0, 0.2, 0.04, 0])
+
+# Damped least squares velocity: equals J^-1 away from singularities, stays bounded near them.
+assert np.allclose(inverse_velocity_dls(analytic @ qdot, q), qdot, atol=1e-12)
+for q2 in (0.0, 1e-3, 0.02):
+    near = [0.3, q2, 0.05, 0.0]
+    rates = inverse_velocity_dls([0.01, 0.0, 0.0, 0.0], near)
+    assert np.all(np.isfinite(rates)) and np.max(np.abs(rates)) < 1.0, rates
 assert np.linalg.matrix_rank(task_jacobian([0, 0, 0.04, 0])) < 4
 assert np.linalg.matrix_rank(task_jacobian([0, math.pi, 0.04, 0])) < 4
 assert_raises(UnreachableTargetError, inverse_kinematics, [0.50, 0.0, 0.15, 0.0])
@@ -110,7 +120,25 @@ assert_raises(UnreachableTargetError, inverse_kinematics, [0.30, 0.0, 0.014, 0.0
 outside_shoulder_limit = forward_kinematics([math.radians(170), 0.0, 0.05, 0.0])
 assert_raises(JointLimitError, inverse_kinematics, outside_shoulder_limit)
 
+# Numerical (DLS) IK agrees with the closed form, including starts at the singular home pose.
+rng = np.random.default_rng(7)
+for _ in range(300):
+    q_true = np.array([rng.uniform(*PARAMETERS.shoulder_limits), rng.uniform(*PARAMETERS.elbow_limits),
+                       rng.uniform(0.0, PARAMETERS.d3_max - PARAMETERS.d3_min),
+                       rng.uniform(-math.pi, math.pi)])
+    target = forward_kinematics(q_true)
+    for q0 in (None, q_true + rng.normal(0.0, 0.3, 4)):
+        numerical = inverse_kinematics_numerical(target, q0)
+        error = forward_kinematics(numerical) - target
+        error[3] = wrap_to_pi(error[3])
+        assert np.max(np.abs(error)) < 1e-8
+        assert any(np.allclose(c[:3], numerical[:3], atol=1e-4) and
+                   abs(wrap_to_pi(c[3] - numerical[3])) < 1e-4 for c in inverse_kinematics(target))
+assert_raises(UnreachableTargetError, inverse_kinematics_numerical, [0.50, 0.0, 0.15, 0.0])
+assert_raises(ConvergenceError, inverse_kinematics_numerical, outside_shoulder_limit)
+
 print("PASS: FK/IK covers both elbow branches, workspace boundaries, unreachable targets, and limits.")
 print("PASS: DH-product transform orientation, task Jacobian, and 6x4 spatial Jacobian agree numerically.")
 print("PASS: inverse velocity recovers joint rates and rejects singular configurations.")
-print("PASS: singular configurations detected at sin(q2)=0.")
+print("PASS: singular and near-singular configurations detected; DLS rates stay bounded.")
+print("PASS: numerical DLS IK matches the closed form from random and singular starting poses.")
