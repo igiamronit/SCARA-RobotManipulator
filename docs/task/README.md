@@ -74,3 +74,9 @@ the nominal cycle to finish in under 3 s with less than 1 mm placement error.
 
 Part 8 covers systematic task validation across repeated trials and varying
 conditions.
+
+## Eye-in-hand variant
+
+The same task can start with eye-in-hand visual servoing, so the robot finds the
+block with a wrist camera instead of reading its pose from the scene.
+[Eye-in-hand visual servoing](ibvs.md)

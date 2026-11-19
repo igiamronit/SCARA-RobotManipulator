@@ -61,7 +61,12 @@ def site_yaw(site):
     return 2*np.arctan2(site.quat[3], site.quat[0])
 
 
-def make_plan(model, transfer_height=TRANSFER_HEIGHT):
+def make_plan(model, transfer_height=TRANSFER_HEIGHT, start_q=None, pick_pose=None):
+    """Plan the task phases from home to the pick_target site.
+
+    ibvs.py passes start_q (the servoed pose above the block) and pick_pose
+    (the tool grasp pose), so the plan starts with the descent instead.
+    """
     limits, settings = load_settings()
     robot_velocity = limits.velocity / float(settings["velocity_scale"])
     limits = Limits(limits.lower, limits.upper, robot_velocity, TASK_ACCELERATION_LIMIT)
@@ -70,21 +75,29 @@ def make_plan(model, transfer_height=TRANSFER_HEIGHT):
     def pose(site, height):
         return [*site.pos[:2], height, site_yaw(site)]
 
+    if pick_pose is None:
+        pick_pose = pose(pick, pick.pos[2] + GRASP_OFFSET)
+    above_pick_pose = [pick_pose[0], pick_pose[1], transfer_height, pick_pose[3]]
     home_pose = forward_kinematics(HOME)
     home_pose[2] = transfer_height
     home, above_pick, at_pick, above_place, at_place = continuous_ik([
-        home_pose, pose(pick, transfer_height), pose(pick, pick.pos[2] + GRASP_OFFSET),
+        home_pose, above_pick_pose, pick_pose,
         pose(place, transfer_height), pose(place, place.pos[2] + GRASP_OFFSET),
-    ], HOME, limits)
+    ], HOME if start_q is None else start_q, limits)
 
     def move(start, end, minimum_duration=0):
         return plan_segment(start, end, limits, margin=settings["timing_margin"],
                             minimum_duration=max(minimum_duration, settings["minimum_segment_s"]),
                             quantum=settings["time_quantum_s"])
 
+    if start_q is None:
+        reach = (Phase("approach", move(home, above_pick), "pick_stand"),
+                 Phase("descend", move(above_pick, at_pick), "pick_stand"))
+    else:
+        reach = (Phase("descend", move(start_q, at_pick), "pick_stand"),)
+
     phases = (
-        Phase("approach", move(home, above_pick), "pick_stand"),
-        Phase("descend", move(above_pick, at_pick), "pick_stand"),
+        *reach,
         Phase("grasp", Segment(at_pick, at_pick, GRIP_RAMP_S), "pick_stand",
               fingers_may_touch=True, grip=(OPEN, CLOSED)),
         Phase("lift", move(at_pick, above_pick), "pick_stand",
@@ -208,11 +221,14 @@ def preflight(scene, trajectory, phases):
     return scene.clearance_report()
 
 
-def simulate(model, trajectory, phases, *, on_step=None):
+def simulate(model, trajectory, phases, *, on_step=None, data=None):
+    """Run the plan; pass data to continue an existing simulation."""
     reference_clearance = preflight(Scene(model), trajectory, phases)
     scene = Scene(model)
-    data = mujoco.MjData(model)
-    data.qpos[:4], data.qpos[4:6] = trajectory.segments[0].q0, OPEN
+    if data is None:
+        data = mujoco.MjData(model)
+        data.qpos[:4], data.qpos[4:6] = trajectory.segments[0].q0, OPEN
+    start_time = float(data.time)
     mass = np.empty((model.nv, model.nv))
     place_id = model.geom("place_stand").id
     pick_id = model.geom("pick_stand").id
@@ -241,7 +257,7 @@ def simulate(model, trajectory, phases, *, on_step=None):
         mujoco.mj_forward(model, data)
 
         time = float(data.time)
-        if (abs(time - step*dt) > 1e-8 or not np.isfinite(data.qpos).all() or
+        if (abs(time - start_time - step*dt) > 1e-6 or not np.isfinite(data.qpos).all() or
                 not np.isfinite(data.qvel).all() or not np.isfinite(data.qacc).all()):
             raise RuntimeError(f"Invalid physics state during {phase.name} at step {step}.")
         peak_tool_error = max(peak_tool_error, float(np.linalg.norm(

@@ -132,6 +132,7 @@ def make_mjcf(mesh_names):
               <geom type="mesh" mesh="palm" contype="0" conaffinity="0" rgba=".18 .24 .32 1"/>
               <geom type="box" pos="0 0 -.045" size=".0325 .046 .011" rgba="0 0 0 0"/>
               <site name="tool" pos="{xyz(0,0,-d4)}" size=".007" rgba="1 0 0 1"/>
+              <camera name="wrist_cam" pos="0 0 -0.058" xyaxes="0 1 0 -1 0 0" fovy="60"/>
               <body name="left_finger" pos="{xyz(0,P['finger_home_offset_m'],-.035)}">
                 <joint name="left_grip" type="slide" axis="0 1 0" limited="true" range="{xyz(0,P['finger_travel_m'])}" damping=".03" solreflimit=".002 1"/>
                 <inertial pos="0 0 -.02" mass="{number(mass['each_finger'])}" diaginertia=".000015 .000015 .000003"/>
