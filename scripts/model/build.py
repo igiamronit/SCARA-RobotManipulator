@@ -12,6 +12,10 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 P = json.loads((ROOT / "config" / "robot.json").read_text(encoding="utf-8"))
 MESH = ROOT / "models" / "meshes"
+FOREARM_Z = -0.052
+ELBOW_PIN_RADIUS = 0.021
+ELBOW_PIN_HALF_LENGTH = 0.017
+ELBOW_PIN_Z = -0.016
 
 
 def number(value: float) -> str:
@@ -109,13 +113,14 @@ def make_mjcf(mesh_names):
         <inertial pos="{xyz(a1/2,0,0)}" mass="{number(mass['upper_arm'])}" diaginertia=".0012 .006 .006"/>
         <geom type="mesh" mesh="shoulder_hub" contype="0" conaffinity="0" rgba=".88 .40 .12 1"/>
         <geom type="mesh" mesh="upper_arm" contype="0" conaffinity="0" rgba=".20 .45 .72 1"/>
-        <geom type="box" pos="{xyz(a1/2,0,0)}" size="{xyz(a1/2,.0335,.022)}" rgba="0 0 0 0"/>
+        <geom name="upper_arm_collision" type="box" pos="{xyz(a1/2,0,0)}" size="{xyz(a1/2,.0335,.022)}" rgba="0 0 0 0"/>
         <body name="forearm" pos="{xyz(a1,0,0)}">
           <joint name="elbow" type="hinge" axis="0 0 1" limited="true" range="{xyz(el[0]*deg,el[1]*deg)}" damping=".03"/>
-          <inertial pos="{xyz(a2/2,0,0)}" mass="{number(mass['forearm'])}" diaginertia=".0006 .0025 .0025"/>
-          <geom type="mesh" mesh="elbow_hub" contype="0" conaffinity="0" rgba=".88 .40 .12 1"/>
-          <geom type="mesh" mesh="forearm" contype="0" conaffinity="0" rgba=".24 .56 .80 1"/>
-          <geom type="box" pos="{xyz(a2/2,0,0)}" size="{xyz(a2/2,.028,.019)}" rgba="0 0 0 0"/>
+          <inertial pos="{xyz(a2/2,0,FOREARM_Z)}" mass="{number(mass['forearm'])}" diaginertia=".0006 .0025 .0025"/>
+          <geom name="elbow_pin" type="cylinder" pos="{xyz(0,0,ELBOW_PIN_Z)}" size="{xyz(ELBOW_PIN_RADIUS,ELBOW_PIN_HALF_LENGTH)}" rgba=".88 .40 .12 1"/>
+          <geom type="mesh" mesh="elbow_hub" pos="{xyz(0,0,FOREARM_Z)}" contype="0" conaffinity="0" rgba=".88 .40 .12 1"/>
+          <geom type="mesh" mesh="forearm" pos="{xyz(0,0,FOREARM_Z)}" contype="0" conaffinity="0" rgba=".24 .56 .80 1"/>
+          <geom name="forearm_collision" type="box" pos="{xyz(a2/2,0,FOREARM_Z)}" size="{xyz(a2/2,.028,.019)}" rgba="0 0 0 0"/>
           <body name="vertical_carriage" pos="{xyz(a2,0,0)}">
             <joint name="vertical" type="slide" axis="0 0 -1" limited="true" range="{xyz(0,q3max)}" damping=".3"/>
             <inertial pos="0 0 0" mass="{number(mass['vertical_carriage'])}" diaginertia=".0005 .0005 .0001"/>
@@ -145,6 +150,9 @@ def make_mjcf(mesh_names):
       </body>
     </body>
   </worldbody>
+  <contact>
+    <pair geom1="upper_arm_collision" geom2="forearm_collision"/>
+  </contact>
   <actuator>
     <motor joint="shoulder" ctrllimited="true" ctrlrange="{xyz(-e['shoulder_Nm'],e['shoulder_Nm'])}"/>
     <motor joint="elbow" ctrllimited="true" ctrlrange="{xyz(-e['elbow_Nm'],e['elbow_Nm'])}"/>
@@ -171,14 +179,15 @@ def make_urdf():
     collisions = {
         "base": [("box",(.16,.16,.018),(0,0,.009)),("cylinder",(.055,P["base_height_m"]-.018),(0,0,(P["base_height_m"]+.018)/2))],
         "upper_arm": [("box",(P["a1_m"],.067,.044),(P["a1_m"]/2,0,0))],
-        "forearm": [("box",(P["a2_m"],.056,.038),(P["a2_m"]/2,0,0))],
+        "forearm": [("box",(P["a2_m"],.056,.038),(P["a2_m"]/2,0,FOREARM_Z)),
+                    ("cylinder",(ELBOW_PIN_RADIUS,2*ELBOW_PIN_HALF_LENGTH),(0,0,ELBOW_PIN_Z))],
         "vertical_carriage": [("cylinder",(.012,.19),(0,0,.01))],
         "wrist": [("box",(.065,.092,.022),(0,0,-.045))],
         "left_finger": [("box",(P["finger_width_m"],P["finger_depth_m"],P["finger_length_m"]),(0,0,-.02))],
         "right_finger": [("box",(P["finger_width_m"],P["finger_depth_m"],P["finger_length_m"]),(0,0,-.02))],
     }
     inertias = {"upper_arm":(mass["upper_arm"],(P["a1_m"]/2,0,0),(.0012,.006,.006)),
-                "forearm":(mass["forearm"],(P["a2_m"]/2,0,0),(.0006,.0025,.0025)),
+                "forearm":(mass["forearm"],(P["a2_m"]/2,0,FOREARM_Z),(.0006,.0025,.0025)),
                 "vertical_carriage":(mass["vertical_carriage"],(0,0,0),(.0005,.0005,.0001)),
                 "wrist":(mass["wrist_and_palm"],(0,0,-.04),(.00035,.00035,.00045)),
                 "left_finger":(mass["each_finger"],(0,0,-.02),(.000015,.000015,.000003)),
@@ -193,8 +202,14 @@ def make_urdf():
             ET.SubElement(item,"inertia",ixx=number(ii[0]),iyy=number(ii[1]),izz=number(ii[2]),ixy="0",ixz="0",iyz="0")
         for mesh_name in visual.get(name,[]):
             item = ET.SubElement(link,"visual")
-            ET.SubElement(item,"origin",xyz="0 0 0",rpy="0 0 0")
+            z = FOREARM_Z if name == "forearm" else 0
+            ET.SubElement(item,"origin",xyz=xyz(0,0,z),rpy="0 0 0")
             ET.SubElement(ET.SubElement(item,"geometry"),"mesh",filename=f"meshes/{mesh_name}.stl")
+        if name == "forearm":
+            item = ET.SubElement(link,"visual")
+            ET.SubElement(item,"origin",xyz=xyz(0,0,ELBOW_PIN_Z),rpy="0 0 0")
+            ET.SubElement(ET.SubElement(item,"geometry"),"cylinder",
+                          radius=number(ELBOW_PIN_RADIUS),length=number(2*ELBOW_PIN_HALF_LENGTH))
         for kind,size,center in collisions.get(name,[]):
             item = ET.SubElement(link,"collision")
             ET.SubElement(item,"origin",xyz=xyz(*center),rpy="0 0 0")

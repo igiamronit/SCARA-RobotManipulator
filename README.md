@@ -15,6 +15,6 @@ Double-click [kinematics.cmd](kinematics.cmd) to open the interactive viewer. Se
 - [x] 3. Derive forward and inverse kinematics, including unreachable targets.
 - [x] 4. Derive velocity kinematics (the Jacobian), and identify singularities.
 - [x] 5. Derive forward and inverse dynamics from the robot’s energies.
-- [ ] 6. Plan a timed path, then control the actuators to track it.
+- [x] 6. Plan a timed path, then control the actuators to track it (unloaded MuJoCo model).
 - [ ] 7. Add a simulated task: objects, grasp/release, and collision constraints.
 - [ ] 8. Validate the equations and measure task results: tracking error, placement accuracy, effort, failures, and cycle time.
