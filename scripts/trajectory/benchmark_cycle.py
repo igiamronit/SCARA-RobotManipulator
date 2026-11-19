@@ -72,9 +72,11 @@ class RepeatedCycle:
 def load_benchmark(count):
     if count < 1:
         raise ValueError("Benchmark needs at least one cycle.")
-    base_limits, _ = load_settings()
+    base_limits, defaults = load_settings()
     settings = json.loads((ROOT / "config/trajectory/benchmark.json").read_text())
-    limits = Limits(base_limits.lower, base_limits.upper, settings["axis_speed_SI"],
+    # Rated axis speeds from config/robot.json (load_settings scales them down).
+    rated_speed = base_limits.velocity / float(defaults["velocity_scale"])
+    limits = Limits(base_limits.lower, base_limits.upper, rated_speed,
                     settings["acceleration_limit_SI"])
     settings["settle_time_s"] = 0.0
 

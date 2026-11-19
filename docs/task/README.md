@@ -72,9 +72,6 @@ the nominal cycle to finish in under 3 s with less than 1 mm placement error.
 | Minimum measured workpiece–obstacle separation | 10.06 mm | 11.86 mm |
 | Samples with an actuator at its command limit | 0 | 0 |
 
-Part 8 covers systematic task validation across repeated trials and varying
-conditions.
-
 ## Eye-in-hand variant
 
 The same task can start with eye-in-hand visual servoing, so the robot finds the

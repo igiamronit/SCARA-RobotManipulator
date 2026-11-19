@@ -41,10 +41,14 @@ reports tracking error, actuator effort, and minimum sampled clearance.
 | Unloaded run | Planned duration | Peak tool position error | Saturated samples |
 | --- | ---: | ---: | ---: |
 | Default quintic route | 7.705 s | 0.076 mm | 0 |
-| Fast round trip | 0.500 s | 0.208 mm | 0 |
+| Fast round trip | 0.800 s | 0.078 mm | 0 |
 
-The fast benchmark measured **6.32 mm** minimum clearance with the forearm
-lowered by 52 mm. Its 0.500 s round trip includes two 10 ms station holds.
+The fast round trip uses the robot's rated axis speeds from `config/robot.json`
+and includes two 10 ms station holds. At these speeds 0.800 s is the fastest
+feasible cycle; the elbow peaks at 7.89 rad/s against its 8 rad/s limit. The
+smallest sampled clearance, 6.32 mm, is the fixed gap between the wrist hub and
+a finger. The upper arm and forearm stay at least 11 mm apart over the whole
+joint range.
 
 ## Implementation
 

@@ -1,33 +1,35 @@
 # SCARA dimensions and limits sources
 
-The project uses ABB axis speeds for the fast unloaded benchmark and uses
-published industrial pick-cycle dimensions as a benchmark reference. The
-robot geometry and most simulation limits are defined in the project files.
+Every simulation uses one set of robot limits, defined in
+[`config/robot.json`](../config/robot.json). Published industrial SCARAs are
+used only as a reference for scale; their speeds are not copied into the model.
 
 ## Axis speeds and travel
 
-The fast preset takes its velocity caps from the **ABB IRB 920T-6/0.45**
-with the **OmniCore C30/90XT** controller. The shoulder and elbow stops in the
-original robot config also match ABB's published working ranges. See
-§1.8.1, p. 51 for travel and §1.8.3, p. 54 for velocity. [ABB product specification, 3HAC075723-001 Rev. P][abb-spec]
+All presets, including the fast benchmark, use the rated axis speeds in
+`config/robot.json`. For comparison, the **ABB IRB 920T-6/0.45** with the
+**OmniCore C30/90XT** controller is listed below. Our shoulder and elbow
+travel match ABB's published working ranges. See §1.8.1 for travel and §1.8.3
+for velocity. [ABB product specification, 3HAC075723-001 Rev. P][abb-spec]
 
-| Project axis | ABB maximum speed | Fast preset (SI) | Project travel | ABB travel |
+| Project axis | Project speed | Project travel | ABB maximum speed | ABB travel |
 | --- | ---: | ---: | ---: | ---: |
-| Shoulder (1) | 396°/s | 6.9115 rad/s | ±150° | ±150° |
-| Elbow (2) | 780°/s | 13.6136 rad/s | ±145° | ±145° |
-| Vertical slide (3) | 1,200 mm/s | 1.2000 m/s | 110 mm stroke | 180 or 300 mm stroke on the standard IP30 version |
-| Wrist (4) | 2,500°/s | 43.6332 rad/s | ±180° | ±400° default |
+| Shoulder (1) | 6 rad/s | ±150° | 396°/s (6.91 rad/s) | ±150° |
+| Elbow (2) | 8 rad/s | ±145° | 780°/s (13.61 rad/s) | ±145° |
+| Vertical slide (3) | 0.8 m/s | 110 mm stroke | 1,200 mm/s | 180 or 300 mm stroke on the standard IP30 version |
+| Wrist (4) | 12 rad/s | ±180° | 2,500°/s (43.63 rad/s) | ±400° default |
 
-The speed caps above apply to the fast preset. The default trajectory uses
-25% of the project speed settings, giving `1.5 rad/s`, `2.0 rad/s`,
-`0.2 m/s`, and `3.0 rad/s` for axes 1 through 4. [Fast preset](../config/trajectory/benchmark.json) · [Default preset](../config/trajectory/defaults.json) · [Robot config](../config/robot.json)
+The fast benchmark uses the full project speeds. The default trajectory uses
+25% of them, giving `1.5 rad/s`, `2.0 rad/s`, `0.2 m/s`, and `3.0 rad/s` for
+axes 1 through 4. [Fast preset](../config/trajectory/benchmark.json) · [Default preset](../config/trajectory/defaults.json) · [Robot config](../config/robot.json)
 
 ## Published pick-cycle references
 
 The fast simulation uses **300 mm station spacing** and **25 mm of tool
-lift** to match the scale of the published motions below. Its **0.500 s**
-round trip is a project target for unloaded motion, with two 10 ms station
-holds. The manufacturer times apply to their published payloads and paths.
+lift** to match the scale of the published motions below. At the project's
+own speed limits its fastest feasible round trip is **0.800 s** for unloaded
+motion, with two 10 ms station holds; the elbow speed sets this limit. The
+manufacturer times apply to their own robots, payloads and paths.
 [Benchmark config](../config/trajectory/benchmark.json) · [Simulation results](trajectory/README.md#reproduce-the-results)
 
 | Manufacturer and model | Reach | Published cycle | Test conditions | Source |

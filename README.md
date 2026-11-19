@@ -17,4 +17,3 @@ Double-click [kinematics.cmd](kinematics.cmd). In Joints, click **Go to object**
 - [x] 5. Derive forward and inverse dynamics from the robot’s energies.
 - [x] 6. Plan a timed path, then control the actuators to track it (unloaded MuJoCo model).
 - [x] 7. Add a simulated task with objects, grasp/release, and collision constraints. [Pick-and-place demo](docs/task/README.md)
-- [ ] 8. Validate the equations and measure task results: tracking error, placement accuracy, effort, failures, and cycle time.

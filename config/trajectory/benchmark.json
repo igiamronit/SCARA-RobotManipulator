@@ -1,13 +1,12 @@
 {
-  "cycle_s": 0.5,
+  "cycle_s": 0.8,
   "dwell_s": 0.01,
   "station_radii_m": [0.16, 0.39],
   "station_spacing_m": 0.3,
   "station_height_m": 0.04,
   "lift_m": 0.025,
   "shoulder_blend_rad": 0.08,
-  "axis_speed_source": "ABB IRB 920T-6/0.45 with OmniCore C30/90XT, product specification 3HAC075723-001 Rev P, section 1.8.3",
-  "axis_speed_SI": [6.9115038379, 13.6135681656, 1.2, 43.6332312999],
+  "axis_speed_source": "config/robot.json velocity_limit (the robot's rated axis speeds)",
   "acceleration_limit_SI": [75, 185, 12, 230],
   "controller_natural_frequency_rad_s": 120,
   "controller_damping_ratio": 0.7
