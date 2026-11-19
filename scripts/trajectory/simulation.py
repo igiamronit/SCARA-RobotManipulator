@@ -52,23 +52,37 @@ class MeshClearance:
                     closest_clearance_time_s=self.time)
 
 
-def setup_model():
-    model = mujoco.MjModel.from_xml_path(str(ROOT / "models" / "scara.xml"))
+def check_motor_layout(model):
     names = ["shoulder", "elbow", "vertical", "wrist_roll", "left_grip", "right_grip"]
-    if model.nq != 6 or model.nv != 6 or model.nu != 6:
-        raise ValueError("Tracking demo requires the original six-joint SCARA model.")
-    if [model.joint(i).name for i in range(6)] != names:
-        raise ValueError("Unexpected model joint order.")
-    # This demo explicitly requires six unit-gear joint motors in joint order.
-    if not np.array_equal(model.actuator_trnid[:, 0], np.arange(6)):
+    axes = np.arange(len(names))
+    if ([model.joint(i).name for i in axes] != names or
+            not np.array_equal(model.jnt_qposadr[:6], axes) or
+            not np.array_equal(model.jnt_dofadr[:6], axes)):
+        raise ValueError("Unexpected SCARA joint order.")
+    if not np.array_equal(model.actuator_trnid[:, 0], axes):
         raise ValueError("Actuator transmissions do not match the supported joint order.")
     if not np.allclose(model.actuator_gear[:, 0], 1):
         raise ValueError("Non-unit motor gearing requires an explicit force mapping.")
+
+
+def setup_model():
+    model = mujoco.MjModel.from_xml_path(str(ROOT / "models" / "scara.xml"))
+    if (model.nq, model.nv, model.nu) != (6, 6, 6):
+        raise ValueError("Tracking demo requires the original six-joint SCARA model.")
+    check_motor_layout(model)
     return model
 
 
 def contact_pairs(model, data):
     return sorted({f"{int(c.geom1)}:{int(c.geom2)}" for c in data.contact})
+
+
+def computed_torque(model, data, mass, acceleration, error, rate_error, wn, damping):
+    """Compute motor efforts for the leading controlled DOFs in joint order."""
+    mujoco.mj_fullM(model, data, mass)
+    n = len(error)
+    command = acceleration + 2*damping*wn*rate_error + wn**2*error
+    return mass[:n, :n] @ command + data.qfrc_bias[:n] - data.qfrc_passive[:n]
 
 
 def simulate(trajectory, settings, *, controller="computed_torque", initial_offset=None,
@@ -116,10 +130,8 @@ def simulate(trajectory, settings, *, controller="computed_torque", initial_offs
         desired_acceleration = np.r_[ad, 0, 0]
         error, rate_error = desired - data.qpos, desired_velocity - data.qvel
         if controller == "computed_torque":
-            # MuJoCo 3.17 API: mj_fullM(model, data, destination).
-            mujoco.mj_fullM(model, data, mass)
-            v = desired_acceleration + 2*damping*wn*rate_error + wn**2*error
-            requested = mass @ v + data.qfrc_bias - data.qfrc_passive
+            requested = computed_torque(model, data, mass, desired_acceleration,
+                                        error, rate_error, wn, damping)
         else:
             requested = kp_direct*error + kd_direct*rate_error + data.qfrc_bias - data.qfrc_passive
         effort = np.clip(requested, model.actuator_ctrlrange[:, 0], model.actuator_ctrlrange[:, 1])
