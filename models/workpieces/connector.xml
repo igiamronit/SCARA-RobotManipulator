@@ -1,0 +1,55 @@
+<mujocoinclude>
+  <!-- Generic 2 x 3 electrical connector, not a manufacturer's exact part.
+       Housing: 32 x 44 x 20 mm. Origin: centre of the gripping envelope.
+       Local Y crosses the two gripper jaws; local +X is the keyed side.
+       Mocap supports kinematic attachment/release, without physics contacts. -->
+  <body name="connector_target" mocap="true" pos=".30 .02 .030">
+    <geom name="connector_base" type="box" size=".016 .022 .003" pos="0 0 -.007"
+          rgba=".72 .74 .70 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_wall_x_neg" type="box" size=".001 .022 .007" pos="-.015 0 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_wall_x_pos" type="box" size=".001 .022 .007" pos=".015 0 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_divider_x" type="box" size=".001 .020 .007" pos="0 0 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_wall_y_neg" type="box" size=".014 .001 .007" pos="0 -.021 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_wall_y_pos" type="box" size=".014 .001 .007" pos="0 .021 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_divider_y_neg" type="box" size=".014 .001 .007" pos="0 -.007 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_divider_y_pos" type="box" size=".014 .001 .007" pos="0 .007 .003"
+          rgba=".82 .84 .78 1" group="3" contype="0" conaffinity="0"/>
+    <!-- Recessed dark socket floors and brass contacts. -->
+    <geom name="connector_socket_1" type="box" size=".006 .006 .0005" pos="-.008 -.014 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_socket_2" type="box" size=".006 .006 .0005" pos=".008 -.014 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_socket_3" type="box" size=".006 .006 .0005" pos="-.008 0 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_socket_4" type="box" size=".006 .006 .0005" pos=".008 0 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_socket_5" type="box" size=".006 .006 .0005" pos="-.008 .014 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_socket_6" type="box" size=".006 .006 .0005" pos=".008 .014 -.0035"
+          rgba=".16 .18 .17 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_1" type="cylinder" size=".0025 .002" pos="-.008 -.014 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_2" type="cylinder" size=".0025 .002" pos=".008 -.014 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_3" type="cylinder" size=".0025 .002" pos="-.008 0 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_4" type="cylinder" size=".0025 .002" pos=".008 0 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_5" type="cylinder" size=".0025 .002" pos="-.008 .014 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <geom name="connector_contact_6" type="cylinder" size=".0025 .002" pos=".008 .014 -.001"
+          rgba=".80 .60 .23 1" group="3" contype="0" conaffinity="0"/>
+    <!-- Polarizing lug makes the requested yaw visible. -->
+    <geom name="connector_key" type="box" size=".003 .005 .003" pos=".019 0 .004"
+          rgba=".38 .41 .37 1" group="3" contype="0" conaffinity="0"/>
+    <!-- Display accent only: green = free, blue = held. -->
+    <geom name="connector_status" type="box" size=".001 .022 .001" pos="-.015 0 .011"
+          rgba=".15 .65 .30 1" group="3" contype="0" conaffinity="0"/>
+  </body>
+</mujocoinclude>

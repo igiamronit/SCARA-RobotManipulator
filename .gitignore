@@ -5,3 +5,19 @@ __pycache__/
 /cad/*.FCStd1
 
 MJMODEL.TXT
+
+# Presentation (kept locally / on Overleaf, not in the repo)
+/presentation/
+
+# Generated outputs
+/output/
+.ipynb_checkpoints/
+
+# LaTeX build files
+*.aux
+*.nav
+*.snm
+*.toc
+*.out
+*.vrb
+*.synctex.gz

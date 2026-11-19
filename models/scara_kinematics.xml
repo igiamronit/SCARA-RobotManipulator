@@ -1,0 +1,9 @@
+<mujoco model="scara_connector_kinematics">
+  <!-- Robot plus a workpiece and a small pickup support. -->
+  <include file="scara.xml"/>
+  <worldbody>
+    <geom name="pickup_support" type="box" pos=".30 .02 .010" size=".028 .034 .010"
+          rgba=".36 .39 .42 1" contype="0" conaffinity="0"/>
+    <include file="workpieces/connector.xml"/>
+  </worldbody>
+</mujoco>

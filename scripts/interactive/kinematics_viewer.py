@@ -17,6 +17,8 @@ import glfw
 import mujoco
 import numpy as np
 
+from target_workpiece import TargetWorkpiece
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "kinematics"))
 from scara_kinematics import (forward_kinematics, inverse_kinematics,
@@ -29,8 +31,9 @@ MODES = ("Joints", "Target", "Velocity")
 
 class State:
     def __init__(self):
-        self.model = mujoco.MjModel.from_xml_path(str(ROOT / "models" / "scara.xml"))
+        self.model = mujoco.MjModel.from_xml_path(str(ROOT / "models" / "scara_kinematics.xml"))
         self.data = mujoco.MjData(self.model)
+        self.workpiece = TargetWorkpiece(self.model, self.data)
         self.raw = json.loads((ROOT / "config" / "robot.json").read_text())
         self.limits = self.model.jnt_range[:4].copy()
         rates = self.raw["velocity_limit"]
@@ -64,14 +67,18 @@ class State:
 
     def pose_joints(self, q):
         self.data.qpos[:4] = np.clip(q, self.limits[:, 0], self.limits[:, 1])
-        self.data.qpos[4:6] = self.raw["finger_travel_m"] if self.grip_open else 0
+        self.data.qpos[4:6] = (self.raw["finger_travel_m"] if self.grip_open else
+                              self.workpiece.finger_positions if self.workpiece.held else 0)
         self.data.qvel[:] = 0
         mujoco.mj_forward(self.model, self.data)
+        self.workpiece.follow(self.pose)
         point = self.data.site("tool").xpos.copy()
         if not self.trail or np.linalg.norm(point - self.trail[-1]) > .001:
             self.trail.append(point)
 
     def home(self):
+        self.grip_open = True
+        self.workpiece.reset()
         self.rates[:] = 0
         self.actual_rates[:] = 0
         self.running = self.circle = False
@@ -81,6 +88,33 @@ class State:
         self.target = self.pose.copy()
         self.valid = True
         self.status = "Ready"
+
+    def toggle_grip(self):
+        self.running = self.circle = False
+        self.actual_rates[:] = 0
+        self.grip_open = not self.grip_open
+        if self.grip_open:
+            held = self.workpiece.held
+            self.workpiece.release()
+            self.status = "Released at current pose" if held else "Gripper open"
+        elif self.workpiece.try_grasp(self.pose):
+            self.status = "Connector held: move joints to carry it"
+        else:
+            self.status = "Missed: align jaws with connector"
+        self.pose_joints(self.q)
+
+    def go_to_object(self):
+        self.running = self.circle = False
+        self.actual_rates[:] = 0
+        if self.workpiece.held:
+            self.status = "Already holding connector"
+            return
+        self.grip_open = True
+        self.pose_joints(self.q)
+        self.target = self.workpiece.pose.copy()
+        self.set_target()
+        if self.valid:
+            self.status = "Aligned: close gripper to pick up"
 
     def set_mode(self, index):
         self.mode = index
@@ -241,7 +275,7 @@ class App:
         s = self.state
         self.fill(0,0,350,850,(.12,.13,.14))
         self.text(12,12,"SCARA / Kinematics")
-        self.text(12,38,"Four arm joints | SI model")
+        self.text(12,38,"Connector: " + ("held" if s.workpiece.held else "free") + " | kinematic grasp")
         self.buttons.clear()
         self.sliders.clear()
         for i,label in enumerate(MODES):
@@ -253,7 +287,7 @@ class App:
             self.slider(i,150+65*i,values[i],*limits[i],labels[i])
         if s.mode == 0:
             self.button(13,420,158,"Straight arm",self.straight)
-            self.button(179,420,158,"Reset joints",s.home)
+            self.button(179,420,158,"Go to object",s.go_to_object)
         elif s.mode == 1:
             branch = "Elbow +" if s.branch > 0 else "Elbow -"
             self.button(13,420,158,branch+" / switch",self.branch)
@@ -261,8 +295,8 @@ class App:
         else:
             self.button(13,420,158,"Pause" if s.running else "Run velocities",self.run,s.running)
             self.button(179,420,158,"Zero velocities",self.zero)
-        self.button(13,461,158,"Home",s.home)
-        self.button(179,461,158,"Close gripper" if s.grip_open else "Open gripper",self.grip)
+        self.button(13,461,158,"Reset scene",s.home)
+        self.button(179,461,158,"Close / pick up" if s.grip_open else "Open / release",self.grip)
         self.button(13,502,158,"Axes: on" if s.axes else "Axes: off",self.axes,s.axes)
         self.button(179,502,158,"Trail: on" if s.trail_visible else "Trail: off",self.trail,s.trail_visible)
         self.fill(13,546,324,1,(.35,.36,.37))
@@ -283,8 +317,8 @@ class App:
         singular = "SINGULAR" if measure<1e-8 else "Near singular" if measure<.12 else "Regular"
         self.text(12,704,f"{singular} | abs(sin q2) = {measure:.3f}")
         self.text(12,737,s.status)
-        self.text(12,778,"F1/F2/F3: mode   1-4: select")
-        self.text(12,800,"Left/Right: adjust   H: home")
+        self.text(12,778,"F1-F3 mode | P object | G grip")
+        self.text(12,800,"1-4 select | Arrows jog | H reset")
         self.text(12,822,"Mouse drag: camera   Wheel: zoom")
 
     def straight(self):
@@ -317,8 +351,7 @@ class App:
         self.state.status = "Velocities zeroed"
 
     def grip(self):
-        self.state.grip_open = not self.state.grip_open
-        self.state.pose_joints(self.state.q)
+        self.state.toggle_grip()
 
     def axes(self):
         self.state.axes = not self.state.axes
@@ -386,6 +419,10 @@ class App:
             self.selected=key-glfw.KEY_1
         elif key==glfw.KEY_H:
             self.state.home()
+        elif key==glfw.KEY_G and action==glfw.PRESS:
+            self.state.toggle_grip()
+        elif key==glfw.KEY_P and action==glfw.PRESS:
+            self.state.go_to_object()
         elif key==glfw.KEY_SPACE:
             if self.state.mode==2:
                 self.run()
@@ -417,6 +454,7 @@ class App:
         self.scale=self.height/850
         sidebar=int(350*self.scale)
         viewport=mujoco.MjrRect(sidebar,0,self.width-sidebar,self.height)
+        self.options.geomgroup[3] = 1
         mujoco.mjv_updateScene(self.state.model,self.state.data,self.options,None,self.camera,
                               mujoco.mjtCatBit.mjCAT_ALL,self.scene)
         s=self.state
@@ -430,9 +468,7 @@ class App:
                 self.extra_geom(mujoco.mjtGeom.mjGEOM_ARROW,p,[.002,0,0],color,p+.045*axis)
         if s.mode==1:
             color=[.15,.85,.3,.8] if s.valid else [1,.15,.1,.9]
-            target=s.target[:3]
-            self.extra_geom(mujoco.mjtGeom.mjGEOM_SPHERE,target,[.008,0,0],color)
-            end=target+.055*np.array([math.cos(s.target[3]),math.sin(s.target[3]),0])
+            target,end=s.workpiece.yaw_arrow(s.target)
             self.extra_geom(mujoco.mjtGeom.mjGEOM_ARROW,target,[.0025,0,0],color,end)
         if s.mode==2 and np.linalg.norm(s.velocity[:3])>1e-6:
             self.extra_geom(mujoco.mjtGeom.mjGEOM_ARROW,p,[.003,0,0],[1,.75,.15,1],p+.7*s.velocity[:3])
@@ -496,7 +532,81 @@ def check():
         s.tick(.04)
         assert s.valid
         assert np.allclose(s.pose,s.target,atol=1e-10)
-    print("PASS: FK edits, both IK branches, invalid target hold, velocity mapping, limits, and circle.")
+    # A free object stays put, including across modes and invalid IK requests.
+    s.home()
+    obj = s.workpiece.pose.copy()
+    for mode in range(3):
+        s.set_mode(mode)
+        s.pose_joints(s.q + [.05, -.03, 0, .1])
+        assert np.array_equal(s.workpiece.pose, obj)
+    s.set_mode(1)
+    s.target[0] = .6
+    s.set_target()
+    assert not s.valid and np.array_equal(s.workpiece.pose, obj)
+    # Closing far away must miss; arriving with closed jaws must not auto-attach.
+    s.home()
+    s.toggle_grip()
+    assert not s.grip_open and not s.workpiece.held
+    s.pose_joints(inverse_kinematics(s.workpiece.pose)[0])
+    assert not s.workpiece.held
+    s.go_to_object()
+    assert s.grip_open and np.allclose(s.pose, obj, atol=1e-10)
+    before = s.workpiece.pose.copy()
+    s.toggle_grip()
+    assert s.workpiece.held and not s.grip_open
+    assert np.allclose(s.workpiece.pose, before, atol=1e-12)
+    s.set_mode(0)
+    s.set_control(2, s.q[2] - .03)
+    assert np.allclose(s.workpiece.pose[:3], obj[:3]+[0,0,.03], atol=1e-10)
+    s.set_control(0, s.q[0]+.2)
+    s.set_control(3, s.q[3]+.3)
+    assert np.allclose(s.workpiece.pose, s.pose, atol=1e-10)
+    s.set_mode(2)
+    s.rates[:] = [.1, -.05, -.01, .2]
+    s.running = True
+    s.tick(.02)
+    assert np.allclose(s.workpiece.pose, s.pose, atol=1e-10)
+    held = s.workpiece.pose.copy()
+    s.toggle_grip()
+    assert not s.workpiece.held and s.grip_open
+    assert not s.running and np.allclose(s.actual_rates, 0)
+    for mode in range(3):
+        s.set_mode(mode)
+        s.pose_joints(s.q+[.03, .02, 0, .05])
+        assert np.array_equal(s.workpiece.pose, held)
+        assert np.allclose(s.data.body("connector_target").xpos, held[:3], atol=1e-12)
+    s.go_to_object()
+    s.toggle_grip()
+    assert s.workpiece.held  # Can pick a released part up again.
+    s.home()
+    assert s.grip_open and not s.workpiece.held
+    assert np.array_equal(s.workpiece.pose, obj)
+    # Reject wrong yaw or height even when horizontal positions coincide.
+    tool = obj.copy(); tool[3] += math.pi/2
+    assert not s.workpiece.try_grasp(tool)
+    tool = obj.copy(); tool[2] += .01
+    assert not s.workpiece.try_grasp(tool)
+    # Small valid offsets are preserved under wrist/arm rotation, without snaps.
+    tool = obj.copy(); tool[:3] += [.001, -.001, .002]; tool[3] += .02
+    assert s.workpiece.try_grasp(tool)
+    assert np.array_equal(s.workpiece.pose, obj)
+    offset = s.workpiece.offset.copy()
+    yaw_offset = s.workpiece.yaw_offset
+    moved = np.array([.25, -.05, .09, .7])
+    s.workpiece.follow(moved)
+    expected = moved[:3] + s.workpiece.rotation(moved[3]) @ offset
+    assert np.allclose(s.workpiece.pose[:3], expected, atol=1e-12)
+    assert math.isclose(s.workpiece.pose[3], moved[3]+yaw_offset, abs_tol=1e-12)
+    assert np.all((s.workpiece.finger_positions >= 0) &
+                  (s.workpiece.finger_positions <= s.raw["finger_travel_m"]))
+    assert s.model.nq == s.model.nv == s.model.nu == 6
+    assert s.model.nmocap == 1
+    geoms = np.flatnonzero(s.model.geom_bodyid == s.model.body("connector_target").id)
+    assert len(geoms) == 22 and np.all(s.model.geom_group[geoms] == 3)
+    assert not np.any(s.model.geom_contype[geoms] | s.model.geom_conaffinity[geoms])
+    print("PASS: FK, IK branches, invalid targets, velocity mapping, limits, and circle.")
+    print("PASS: persistent object, aligned pickup, missed grasp, joint/velocity carry, release, regrasp, and reset.")
+
 
 
 def main():
