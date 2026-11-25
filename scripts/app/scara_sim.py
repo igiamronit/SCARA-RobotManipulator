@@ -12,7 +12,8 @@ Modes (switch with F6-F12, or start one with --mode):
   F11 Dynamics              sliders = motor efforts     -> physics + our model
   F12 Trajectory            computed-torque tracking of the planned route
 
-Space pauses the motion modes. Backspace (Reset) returns to the home pose.
+Use the native Control panel, or Up/Down to select an input and Left/Right
+ to adjust it. Space pauses motion modes. Backspace (Reset) returns home.
 
     python scripts/app/scara_sim.py [--mode fk]
     python scripts/app/scara_sim.py --check      # headless self-test
@@ -22,6 +23,7 @@ from __future__ import annotations
 import argparse
 from collections import deque
 import math
+from queue import Empty, SimpleQueue
 from pathlib import Path
 import sys
 import time
@@ -56,6 +58,10 @@ def robot_tree(title: str) -> ET.Element:
     root.set("model", f"SCARA - {title}")
     compiler = root.find("compiler")
     compiler.set("meshdir", str((MODEL_PATH.parent / compiler.get("meshdir", ".")).resolve()))
+    # The native Joint panel is a separate, pause-gated qpos editor. Hide its
+    # duplicate inputs; all app inputs live in the always-editable Control panel.
+    for joint in root.iter("joint"):
+        joint.set("group", "5")
     return root
 
 
@@ -158,6 +164,8 @@ class Mode:
 
     def setup_view(self, viewer) -> None:
         viewer.opt.frame = mujoco.mjtFrame.mjFRAME_SITE   # tool frame
+        viewer.opt.jointgroup[5] = 0
+        viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 0
 
     # Shared ------------------------------------------------------------------
     def reset(self) -> None:
@@ -183,32 +191,6 @@ class Mode:
         return self.data.qpos[:4].copy()
 
 
-class ModelMode(Mode):
-    title = "Model"
-
-    def build(self):
-        root = robot_tree(self.title)
-        set_sliders(root, [])
-        add_home_key(root, [*HOME, 0.009, 0.009], [])
-        return compile_tree(root)
-
-    def setup_view(self, viewer):
-        viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
-        viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = 1
-
-    def info(self):
-        p = PARAMETERS
-        return [
-            ("MODEL", "R-R-P-R SCARA + gripper"),
-            ("a1, a2", f"{p.a1*1000:.0f}, {p.a2*1000:.0f} mm"),
-            ("h, d4", f"{p.base_height*1000:.0f}, {p.d4*1000:.0f} mm"),
-            ("d3*", f"{p.d3_min*1000:.0f}-{p.d3_max*1000:.0f} mm"),
-            ("q1, q2 range", "+-150, +-145 deg"),
-            ("q4 range", "+-180 deg"),
-            ("Shown", "body frames, joint axes"),
-        ]
-
-
 class ForwardKinematics(Mode):
     title = "Forward kinematics"
 
@@ -222,11 +204,34 @@ class ForwardKinematics(Mode):
         add_home_key(root, [*HOME, 0.009, 0.009], [*(HOME * TO_DISPLAY), 9])
         return compile_tree(root)
 
+    def reset(self):
+        super().reset()
+        self.last_qpos = self.data.qpos.copy()
+        self.last_ctrl = self.data.ctrl.copy()
+
     def update(self, dt):
-        c = self.data.ctrl
+        # Native Joint edits change qpos; Control edits change ctrl. Preserve
+        # either input, with Control taking priority if the same axis is edited
+        # in both panels before a frame. The Joint panel uses SI coordinates.
+        q, c = self.data.qpos.copy(), self.data.ctrl.copy()
+        joint_changed = np.abs(q - self.last_qpos) > 1e-12
+        control_changed = np.abs(c - self.last_ctrl) > 1e-9
+        opening = q[4]
+        if joint_changed[5] and not joint_changed[4]:
+            opening = q[5]
+        elif joint_changed[4] and joint_changed[5]:
+            opening = (q[4] + q[5]) / 2
+        joint_values = np.r_[q[:4] * TO_DISPLAY, opening * 1000]
+        changed = np.r_[joint_changed[:4], np.any(joint_changed[4:6])]
+        use_joint = changed & ~control_changed
+        c[use_joint] = joint_values[use_joint]
+        c = np.clip(c, *self.model.actuator_ctrlrange.T)
+        self.data.ctrl[:] = c
         self.data.qpos[:4] = c[:4] / TO_DISPLAY
         self.data.qpos[4:6] = c[4] / 1000
         mujoco.mj_forward(self.model, self.data)
+        self.last_qpos = self.data.qpos.copy()
+        self.last_ctrl = c.copy()
 
     def info(self):
         pose = forward_kinematics(self.q)
@@ -239,6 +244,33 @@ class ForwardKinematics(Mode):
                 ("FK vs MuJoCo", f"{error:.3f} um"),
                 ("det J", f"{PARAMETERS.a1*PARAMETERS.a2*math.sin(self.q[1]):+.4f}"),
                 ("Jacobian", short_singular(self.q[1]))]
+
+
+class ModelMode(ForwardKinematics):
+    title = "Model"
+
+    def setup_view(self, viewer):
+        super().setup_view(viewer)
+        viewer.opt.frame = mujoco.mjtFrame.mjFRAME_BODY
+
+    def draw(self, scene):
+        # Joint group 5 is hidden from the native Joint panel. Draw the actual
+        # axes here so the model inspection mode still shows every joint axis.
+        for i in range(self.model.njnt):
+            point, axis = self.data.xanchor[i], self.data.xaxis[i]
+            add_arrow(scene, point, point + .045*axis, [.85, .25, .20, 1], .002)
+
+    def info(self):
+        p = PARAMETERS
+        return [
+            ("MODEL", "inputs: Control panel"),
+            ("a1, a2", f"{p.a1*1000:.0f}, {p.a2*1000:.0f} mm"),
+            ("h, d4", f"{p.base_height*1000:.0f}, {p.d4*1000:.0f} mm"),
+            ("d3*", f"{p.d3_min*1000:.0f}-{p.d3_max*1000:.0f} mm"),
+            ("q1, q2 range", "+-150, +-145 deg"),
+            ("q4 range", "+-180 deg"),
+            ("Shown", "body frames, joint axes"),
+        ]
 
 
 class InverseKinematics(Mode):
@@ -595,59 +627,117 @@ def mode_list(current: int) -> tuple[str, str]:
     return keys, titles
 
 
-def run(start: int, duration: float = 0.0) -> None:
+class Inputs:
+    """Queue native key events; apply all state changes in the main thread."""
+    def __init__(self, mode):
+        self.mode = mode
+        self.selected = 0
+        self.commands = SimpleQueue()
+        self.switch = None
+
+    def on_key(self, key):
+        self.commands.put(key)
+
+    def apply(self):
+        while True:
+            try:
+                key = self.commands.get_nowait()
+            except Empty:
+                break
+            if F6 <= key < F6 + len(MODES):
+                index = key-F6
+                if type(self.mode) is not MODES[index]:
+                    self.switch = index
+                continue
+            if key == SPACE:
+                if self.mode.physics or isinstance(self.mode, VelocityKinematics):
+                    self.mode.paused = not self.mode.paused
+                continue
+            if isinstance(self.mode, Trajectory) or not self.mode.model.nu:
+                continue
+            if key in (264, 265):  # Down/Up: choose a Control input.
+                self.selected = (self.selected + (1 if key == 264 else -1)) % self.mode.model.nu
+            elif key in (263, 262):  # Left/Right: change it by 1% of its range.
+                i = self.selected
+                low, high = self.mode.model.actuator_ctrlrange[i]
+                step = .01*(high-low)
+                sign = -1 if key == 263 else 1
+                self.mode.data.ctrl[i] = np.clip(self.mode.data.ctrl[i]+sign*step, low, high)
+
+    def rows(self):
+        if isinstance(self.mode, Trajectory):
+            return [("Inputs", "automatic trajectory")]
+        i = self.selected
+        name = self.mode.model.actuator(i).name
+        return [("Keyboard", "Up/Down select; Left/Right adjust"),
+                ("Selected input", f"{name}: {self.mode.data.ctrl[i]:.2f}"),
+                ("Mouse inputs", "expand Control on the right")]
+
+
+def switch_mode(viewer, inputs, index):
+    """Reload within the existing native window, preserving its size/camera."""
+    new_mode = MODES[index]()
+    native = viewer._get_sim()
+    if native is None:
+        return False
+    # Installed MuJoCo exposes reload through Simulate.load. It waits for the
+    # render thread, so call it outside viewer.lock(). It also owns m/d refs.
+    native.load(new_mode.model, new_mode.data, "")
+    inputs.mode, inputs.selected, inputs.switch = new_mode, 0, None
+    viewer.clear_figures()
+    with viewer.lock():
+        viewer.user_scn.ngeom = 0
+        new_mode.setup_view(viewer)
+    viewer.sync()
+    return True
+
+
+def run(start: int, duration: float = 0.0, on_frame=None) -> None:
     import mujoco.viewer
 
-    request = {"mode": start, "switch": None}
-    camera = None
+    inputs = Inputs(MODES[start]())
     started = time.perf_counter()
-    while True:
-        mode = MODES[request["mode"]]()
-
-        def on_key(key, mode=mode):
-            if F6 <= key < F6 + len(MODES):
-                request["switch"] = key - F6
-            elif key == SPACE and mode.physics:
-                mode.paused = not mode.paused
-
-        with mujoco.viewer.launch_passive(mode.model, mode.data, key_callback=on_key) as viewer:
+    with mujoco.viewer.launch_passive(inputs.mode.model, inputs.mode.data,
+                                     key_callback=inputs.on_key) as viewer:
+        with viewer.lock():
+            viewer.cam.lookat[:] = [0.15, 0.0, 0.17]
+            viewer.cam.distance, viewer.cam.azimuth, viewer.cam.elevation = 1.0, 135, -25
+            inputs.mode.setup_view(viewer)
+        last = time.perf_counter()
+        while viewer.is_running():
+            viewer.sync()
+            now = time.perf_counter()
+            dt, last = min(now-last, .05), now
             with viewer.lock():
-                if camera is None:
-                    viewer.cam.lookat[:] = [0.15, 0.0, 0.17]
-                    viewer.cam.distance, viewer.cam.azimuth, viewer.cam.elevation = 1.0, 135, -25
-                else:
-                    viewer.cam.lookat[:], viewer.cam.distance, viewer.cam.azimuth, viewer.cam.elevation = camera
-                mode.setup_view(viewer)
-            last = time.perf_counter()
-            while viewer.is_running() and request["switch"] is None:
-                now = time.perf_counter()
-                dt, last = min(now - last, 0.05), now
-                with viewer.lock():
-                    mode.step(dt)
-                    viewer.user_scn.ngeom = 0
-                    mode.draw(viewer.user_scn)
-                    camera = (viewer.cam.lookat.copy(), viewer.cam.distance,
-                              viewer.cam.azimuth, viewer.cam.elevation)
-                label, value = columns(mode.info())
-                if mode.physics and mode.paused:
-                    label, value = "PAUSED (Space)\n" + label, "\n" + value
-                keys, titles = mode_list(request["mode"])
-                viewer.set_texts([(None, mujoco.mjtGridPos.mjGRID_TOPLEFT, label, value),
-                                  (None, mujoco.mjtGridPos.mjGRID_BOTTOMLEFT, keys, titles)])
-                figure = mode.figure()
-                rect = viewer.viewport
-                if figure is not None and rect is not None and rect.width > 0:
-                    # Bottom right, beside the mode list; it grows with the window.
-                    w = int(min(rect.width * 0.5, max(rect.width - 330, 220)))
-                    h = int(min(rect.height * 0.4, 0.75 * w))
-                    viewer.set_figures((mujoco.MjrRect(rect.left + rect.width - w, rect.bottom, w, h), figure))
-                viewer.sync()
-                if duration and now - started > duration:
+                inputs.apply()
+            if inputs.switch is not None:
+                if not switch_mode(viewer, inputs, inputs.switch):
                     return
-                time.sleep(max(0.0, 1 / 60 - (time.perf_counter() - now)))
-        if request["switch"] is None:
-            return                       # window closed
-        request["mode"], request["switch"] = request["switch"], None
+                last = time.perf_counter()
+            mode = inputs.mode
+            with viewer.lock():
+                mode.step(dt)
+                viewer.user_scn.ngeom = 0
+                mode.draw(viewer.user_scn)
+            label, value = columns(mode.info() + inputs.rows())
+            if mode.paused:
+                label, value = "PAUSED (Space)\n" + label, "\n" + value
+            current = MODES.index(type(mode))
+            keys, titles = mode_list(current)
+            viewer.set_texts([(None, mujoco.mjtGridPos.mjGRID_TOPLEFT, label, value),
+                              (None, mujoco.mjtGridPos.mjGRID_BOTTOMLEFT, keys, titles)])
+            figure = mode.figure()
+            rect = viewer.viewport
+            if figure is not None and rect is not None and rect.width > 0:
+                w = int(min(rect.width*.5, max(rect.width-330, 220)))
+                h = int(min(rect.height*.4, .75*w))
+                viewer.set_figures((mujoco.MjrRect(rect.left+rect.width-w, rect.bottom, w, h), figure))
+            viewer.sync()
+            if on_frame is not None:
+                on_frame(viewer, inputs)
+            if duration and time.perf_counter()-started > duration:
+                return
+            time.sleep(max(0.0, 1/60-(time.perf_counter()-now)))
 
 
 # ---------------------------------------------------------------------------
@@ -655,13 +745,45 @@ def run(start: int, duration: float = 0.0) -> None:
 # ---------------------------------------------------------------------------
 def check() -> None:
     m = ModelMode()
-    assert m.model.nu == 0 and np.allclose(m.q, HOME)
+    assert m.model.nu == 5 and np.allclose(m.q, HOME)
 
     fk = ForwardKinematics()
     fk.data.ctrl[:4] = [30, -50, 40, 10]
     fk.step(0.02)
     assert np.allclose(fk.q, np.array([30, -50, 40, 10]) / TO_DISPLAY)
     assert np.linalg.norm(forward_kinematics(fk.q)[:3] - fk.tool()) < 1e-9
+
+    # Simulate native Joint-panel edits, then confirm FK does not overwrite them.
+    fk.data.qpos[:4] = [.8, -.7, .06, .3]
+    fk.data.qpos[5] = .012
+    fk.step(.02)
+    assert np.allclose(fk.q, [.8, -.7, .06, .3])
+    assert np.allclose(fk.data.qpos[4:6], .012)
+    assert np.allclose(fk.data.ctrl, [*(fk.q * TO_DISPLAY), 12])
+    # A later Control edit must still work and refresh the Joint positions.
+    fk.data.ctrl[0] = -35
+    fk.step(.02)
+    assert np.isclose(fk.q[0], math.radians(-35))
+    assert np.isclose(fk.q[1], -.7)
+    m.data.qpos[0] = .9
+    m.step(.02)
+    assert np.linalg.norm(forward_kinematics(m.q)[:3] - m.tool()) < 1e-9
+
+    keys = Inputs(ForwardKinematics())
+    before = keys.mode.q.copy()
+    keys.on_key(262)  # Right increases shoulder.
+    keys.apply(); keys.mode.step(.02)
+    assert keys.mode.q[0] > before[0]
+    assert np.allclose(keys.mode.q[1:], before[1:])
+    keys.on_key(264); keys.on_key(262)  # Down selects elbow, Right increases it.
+    keys.apply(); keys.mode.step(.02)
+    assert keys.mode.q[1] > before[1]
+    assert np.all(keys.mode.model.jnt_group == 5)
+    for _ in range(1000): keys.on_key(262)
+    keys.apply(); keys.mode.step(.02)
+    assert keys.mode.data.ctrl[1] == 145
+    keys.on_key(F6+2); keys.apply()
+    assert keys.switch == 2
 
     ik = InverseKinematics()
     for branch in (-1, 1):
@@ -702,13 +824,13 @@ def check() -> None:
     mujoco.mj_resetData(reset.model, reset.data)    # what the viewer's Reset does
     reset.step(0.02)
     assert np.allclose(reset.q, HOME)
-    print("PASS: all 7 modes build; FK/IK/velocity/resolved-rate math, dynamics vs MuJoCo "
+    print("PASS: queued keyboard controls, control limits, both FK input paths, all 7 modes; FK/IK/velocity/resolved-rate math, dynamics vs MuJoCo "
           f"(worst {dyn.worst:.1e}), trajectory tracking (peak {traj.peak*1000:.3f} mm), reset to home.")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--mode", choices=NAMES, default="model")
+    parser.add_argument("--mode", choices=NAMES, default="fk")
     parser.add_argument("--check", action="store_true", help="headless self-test, no window")
     parser.add_argument("--duration", type=float, default=0.0, help="auto-close after N seconds (testing)")
     args = parser.parse_args()
