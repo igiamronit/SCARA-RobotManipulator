@@ -22,6 +22,7 @@ import argparse
 import json
 import sys
 
+import cv2
 import mujoco
 import numpy as np
 from PIL import Image, ImageDraw
@@ -51,6 +52,8 @@ MAX_YAW_RATE = 1.0                    # rad/s
 EPSILON_PX = 1.0
 MAX_SERVO_S = 8.0
 MIN_BLOCK_PIXELS = 500
+CORNER_METHOD = "harris"            # "harris" or "moments"
+HARRIS_THRESHOLD = .1               # keep response above 10% of the strongest corner
 
 
 class WristCamera:
@@ -89,7 +92,7 @@ def block_top_face(rgb, depth):
     return yellow & (depth < depth[yellow].min() + .001)
 
 
-def corners(face):
+def moment_corners(face):
     """The 4 corners of the rectangular face, from its centroid and second moments.
 
     A uniform rectangle n pixels long has variance (n^2 - 1)/12 along that side,
@@ -106,6 +109,44 @@ def corners(face):
                      for i, j in ((1, 1), (-1, 1), (-1, -1), (1, -1))])
 
 
+def harris_corners(face):
+    """The 4 corners of the face with the Harris detector, refined to sub-pixel.
+
+    Harris runs on the segmented top-face mask, so corners of the stands, the
+    obstacle and the gripper are ignored. Each corner gives one blob of high
+    response; the 4 strongest blobs are kept and refined with cornerSubPix.
+    The result uses the same corner order as moment_corners. Returns None if
+    4 corners are not found.
+    """
+    image = cv2.GaussianBlur(face.astype(np.float32), (5, 5), 1.0)
+    response = cv2.cornerHarris(image, blockSize=5, ksize=3, k=0.04)
+    strong = (response > HARRIS_THRESHOLD * response.max()).astype(np.uint8)
+    count, labels = cv2.connectedComponents(strong)
+    peaks = []
+    for label in range(1, count):
+        rows, cols = np.nonzero(labels == label)
+        best = np.argmax(response[rows, cols])
+        peaks.append((response[rows[best], cols[best]], cols[best], rows[best]))
+    if len(peaks) < 4:
+        return None
+    peaks.sort(reverse=True)
+    points = np.array([[x, y] for _, x, y in peaks[:4]], dtype=np.float32).reshape(-1, 1, 2)
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 40, .01)
+    cv2.cornerSubPix(image, points, (5, 5), (-1, -1), criteria)
+    points = points.reshape(-1, 2).astype(float) + .5   # OpenCV pixel centres are at integers
+    # Order by angle about the centre, starting on a long edge (as moment_corners does).
+    offset = points - points.mean(axis=0)
+    points = points[np.argsort(np.arctan2(offset[:, 1], offset[:, 0]))]
+    if np.linalg.norm(points[1] - points[0]) < np.linalg.norm(points[2] - points[1]):
+        points = np.roll(points, -1, axis=0)
+    return points
+
+
+def corners(face):
+    """The 4 top-face corners with the selected method (CORNER_METHOD)."""
+    return harris_corners(face) if CORNER_METHOD == "harris" else moment_corners(face)
+
+
 def match_order(s, s_star):
     """A rectangle looks the same after a half turn: use the corner order closest to s*."""
     turned = np.roll(s, 2, axis=0)
@@ -118,8 +159,11 @@ def observe(camera, data):
     face = block_top_face(rgb, depth)
     if face is None or face[0].any() or face[-1].any() or face[:, 0].any() or face[:, -1].any():
         return None
+    s = corners(face)
+    if s is None:
+        return None
     # The top face is parallel to the image plane, so all 4 corners share one depth.
-    return corners(face), float(np.median(depth[face])), rgb
+    return s, float(np.median(depth[face])), rgb
 
 
 def draw_features(rgb, s, s_star):
@@ -345,6 +389,7 @@ def run(model, goal, *, on_step=None, **servo_options):
 
 
 def main():
+    global CORNER_METHOD
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--teach", action="store_true", help="Record the goal image s* and exit")
@@ -352,7 +397,10 @@ def main():
     parser.add_argument("--speed", type=float, default=1, help="Viewer playback speed")
     parser.add_argument("--block-shift", type=float, nargs=3, default=(0, 0, 0),
                         metavar=("DX", "DY", "DYAW"), help="Move the block (m, m, rad)")
+    parser.add_argument("--corners", choices=("harris", "moments"), default=CORNER_METHOD,
+                        help="Corner detector for the image features")
     args = parser.parse_args()
+    CORNER_METHOD = args.corners
     model = load_scene()
     if args.teach:
         GOAL_FILE.parent.mkdir(parents=True, exist_ok=True)
