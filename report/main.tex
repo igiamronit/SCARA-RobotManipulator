@@ -8,6 +8,8 @@
 \usepackage[margin=25mm,headheight=14pt]{geometry}
 \usepackage{amsmath,amssymb,bm}
 \usepackage{graphicx,booktabs,tabularx,array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc}
 \usepackage{caption,subcaption,float,placeins}
 \usepackage{fancyhdr,microtype,enumitem}
 \usepackage[hidelinks]{hyperref}
@@ -361,20 +363,144 @@ extension it is $280-190-75=15$ mm. The fingertips extend 5 mm below the tool
 reference, leaving 10 mm above the floor at this limiting unloaded pose.
 
 \subsection{Inverse kinematics and workspace}
-For a requested pose $(x,y,z,\phi)$, define
-\begin{equation}
- c_2=\frac{x^2+y^2-a_1^2-a_2^2}{2a_1a_2},\qquad
- q_2=\pm\arccos c_2.
-\end{equation}
-For each elbow branch,
+For a desired tool pose $(x,y,z,\phi)$, the two rotary arm joints are first
+found from the horizontal projection. Let $O$ be the shoulder, $E$ the elbow
+and $P$ the tool-axis projection, so that $OE=a_1$, $EP=a_2$ and
+$OP=r=\sqrt{x^2+y^2}$. Figure~\ref{fig:iktriangles} shows the arm triangle
+and its components in axes aligned with the first link.
+
+\begin{figure}[H]\centering
+\begin{subfigure}[t]{.49\linewidth}\centering
+\begin{tikzpicture}[scale=1.15,>=Stealth,line cap=round,line join=round,
+                    every node/.style={font=\small}]
+ \coordinate (O) at (0,0);
+ \coordinate (E) at ({2.8*cos(12)},{2.8*sin(12)});
+ \coordinate (P) at ({2.8*cos(12)+2.1*cos(80)},
+                     {2.8*sin(12)+2.1*sin(80)});
+ \draw[->,thin] (-.15,0)--(4.2,0) node[right] {$x$};
+ \draw[->,thin] (0,-.15)--(0,3.15) node[above] {$y$};
+ \draw[very thick] (O)--node[midway,below=5pt] {$a_1$}(E)
+                       --node[midway,right=5pt] {$a_2$}(P);
+ \draw[dashed] (O)--node[midway,above left=2pt] {$r$}(P);
+ \draw[densely dotted] (E)--++({1.0*cos(12)},{1.0*sin(12)});
+ \draw[->] (.9,0) arc[start angle=0,end angle=12,radius=.9];
+ \node at ({1.20*cos(6)},{1.20*sin(6)}) {$q_1$};
+ \draw[->] ({1.18*cos(12)},{1.18*sin(12)})
+       arc[start angle=12,end angle=40.5,radius=1.18];
+ \node at ({1.48*cos(26.25)},{1.48*sin(26.25)}) {$\beta$};
+ \draw[->] ($(E)+({.62*cos(12)},{.62*sin(12)})$)
+       arc[start angle=12,end angle=80,radius=.62];
+ \node at ($(E)+({.91*cos(46)},{.91*sin(46)})$) {$q_2$};
+ \draw ($(E)+({.42*cos(80)},{.42*sin(80)})$)
+       arc[start angle=80,end angle=192,radius=.42];
+ \node at ($(E)+({.67*cos(136)},{.67*sin(136)})$) {$\gamma$};
+ \fill (O) circle (1.6pt) node[below left] {$O$};
+ \fill (E) circle (1.6pt) node[below right=3pt] {$E$};
+ \fill (P) circle (1.6pt) node[above right=2pt] {$P(x,y)$};
+\end{tikzpicture}
+\caption{Horizontal arm triangle, shown for $q_2>0$.}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{.49\linewidth}\centering
+\begin{tikzpicture}[scale=1.15,>=Stealth,line cap=round,line join=round,
+                    every node/.style={font=\small}]
+ \coordinate (O) at (0,0);
+ \coordinate (E) at (2.8,0);
+ \coordinate (P) at ({2.8+2.1*cos(68)},{2.1*sin(68)});
+ \coordinate (Q) at ({2.8+2.1*cos(68)},0);
+ \draw[->,thin] (-.15,0)--(4.25,0);
+ \draw[->,thin] (0,-.15)--(0,3.15);
+ \draw[very thick] (O)--node[midway,below=5pt] {$a_1$}(E)
+                       --node[midway,above left=3pt] {$a_2$}(P);
+ \draw[dashed] (O)--node[midway,above left=2pt] {$r$}(P);
+ \draw[thin] (P)--(Q);
+ \draw ($(Q)+(-.16,0)$)--++(0,.16)--++(.16,0);
+ \draw[->] (.85,0) arc[start angle=0,end angle=28.5,radius=.85];
+ \node at ({1.13*cos(14.25)},{1.13*sin(14.25)}) {$\beta$};
+ \draw[->] ($(E)+(.47,0)$) arc[start angle=0,end angle=68,radius=.47];
+ \node at ($(E)+({.68*cos(34)},{.68*sin(34)})$) {$q_2$};
+ \draw[<->,thin] (0,-.65)--node[midway,fill=white,inner sep=2pt]
+          {$X=a_1+a_2\cos q_2$} ($(Q)+(0,-.65)$);
+ \draw[<->,thin] ($(Q)+(.47,0)$)--node[midway,right=3pt]
+          {$Y=a_2\sin q_2$} ($(P)+(.47,0)$);
+ \fill (O) circle (1.6pt) node[below left] {$O$};
+ \fill (E) circle (1.6pt) node[below=5pt] {$E$};
+ \fill (P) circle (1.6pt) node[above right=2pt] {$P$};
+ \node[below=3pt] at (Q) {$Q$};
+\end{tikzpicture}
+\caption{Right triangle after rotating the axes by $q_1$.}
+\end{subfigure}
+\caption{Geometry for inverse kinematics. The base-to-target bearing is
+$\theta=\operatorname{atan2}(y,x)=q_1+\beta$. The internal elbow angle is
+$\gamma=\pi-|q_2|$. Both diagrams are horizontal projections; the physical
+52 mm offset between the arm solids does not change these triangles.}
+\label{fig:iktriangles}
+\end{figure}
+
+\paragraph{Elbow angle from the cosine rule.}
+In triangle $OEP$, the internal angle $\gamma$ is supplementary to the
+magnitude of the signed joint angle $q_2$. Applying the cosine rule gives
 \begin{align}
- q_1&=\operatorname{atan2}(y,x)-\operatorname{atan2}(a_2\sin q_2,a_1+a_2\cos q_2),\\
- q_3&=h-z-d_4-d_{3,0},\qquad q_4=q_1+q_2-\phi.
+ r^2&=a_1^2+a_2^2-2a_1a_2\cos\gamma,\\
+ \cos\gamma&=\cos(\pi-|q_2|)=-\cos q_2,\\
+ r^2&=a_1^2+a_2^2+2a_1a_2\cos q_2.
 \end{align}
-Candidates are checked against the finite joint intervals. A geometrically
-unreachable target and a target whose solutions violate all joint limits
-raise distinct errors. Motion conversion selects a continuous elbow branch
-near the preceding configuration.
+Therefore,
+\begin{equation}
+ c_2\equiv\cos q_2=\frac{x^2+y^2-a_1^2-a_2^2}{2a_1a_2},\qquad
+ \boxed{q_2=\pm\arccos c_2}.
+\end{equation}
+The two signs give the two elbow configurations reaching the same
+horizontal point. A real solution requires $|c_2|\leq1$, equivalently
+$|a_1-a_2|\leq r\leq a_1+a_2$. The solutions coincide when the triangle
+becomes collinear.
+
+\paragraph{Shoulder angle from the right triangle.}
+In the first-link-aligned axes of Figure~\ref{fig:iktriangles}(b), the
+target has signed components
+\begin{equation}
+ X=a_1+a_2\cos q_2,\qquad Y=a_2\sin q_2.
+\end{equation}
+The target bearing in these axes is $\beta=\operatorname{atan2}(Y,X)$.
+The first link is rotated by $q_1$ relative to the world $x$ axis, so
+\begin{equation}
+ \theta=q_1+\beta,\qquad \theta=\operatorname{atan2}(y,x).
+\end{equation}
+Subtracting the two bearings gives
+\begin{equation}
+ \boxed{q_1=\operatorname{atan2}(y,x)
+ -\operatorname{atan2}(a_2\sin q_2,a_1+a_2\cos q_2)}.
+\end{equation}
+This expression is evaluated for each sign of $q_2$. The signed sine and
+the two-argument arctangent preserve the quadrant, including the negative
+elbow configuration for which $Y$ and $\beta$ are negative.
+
+\paragraph{Slide displacement and wrist angle.}
+The vertical coordinate and tool yaw decouple from the arm triangle.
+Substituting $d_3^*=d_{3,0}+q_3$ into the height equation gives
+\begin{equation}
+ z=h-(d_{3,0}+q_3)-d_4
+ \quad\Longrightarrow\quad
+ \boxed{q_3=h-z-d_4-d_{3,0}}.
+\end{equation}
+The wrist axis points downward, so its rotation subtracts from the two
+arm rotations. Hence
+\begin{equation}
+ \phi=q_1+q_2-q_4
+ \quad\Longrightarrow\quad
+ \boxed{q_4=q_1+q_2-\phi}.
+\end{equation}
+Equivalent angle representatives are chosen within the rotary joint
+intervals. Each candidate is then checked against the shoulder, elbow,
+slide and wrist limits. A geometrically unreachable target and a target
+whose solutions violate all joint limits are rejected separately. For a
+sequence of poses, a continuous elbow configuration is selected near the
+preceding joint state.
+
+\paragraph{Resulting workspace.}
+The triangle inequality gives the geometric radial workspace. The elbow
+and shoulder limits reduce it further, as shown in
+Figure~\ref{fig:workspace}. The slide independently restricts the tool
+height to $15$--$125$ mm above the floor.
 
 \figfull[.65]{workspace_current.pdf}{Horizontal reach with the shoulder and elbow limits, sampled from the implemented geometry. The dashed circle is the unconstrained 60 mm inner radius. Tool height and wrist orientation impose additional pose constraints.}{fig:workspace}
 
