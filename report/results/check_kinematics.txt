@@ -1,0 +1,5 @@
+PASS: FK/IK covers both elbow branches, workspace boundaries, unreachable targets, and limits.
+PASS: DH-product transform orientation, task Jacobian, and 6x4 spatial Jacobian agree numerically.
+PASS: inverse velocity recovers joint rates and rejects singular configurations.
+PASS: singular and near-singular configurations detected; DLS rates stay bounded.
+PASS: numerical DLS IK matches the closed form from random and singular starting poses.

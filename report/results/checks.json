@@ -1,0 +1,30 @@
+{
+  "model": {
+    "command": "python scripts/model/check_model.py",
+    "exit_code": 0
+  },
+  "kinematics": {
+    "command": "python scripts/kinematics/check_kinematics.py",
+    "exit_code": 0
+  },
+  "dynamics": {
+    "command": "python scripts/dynamics/check_dynamics.py",
+    "exit_code": 0
+  },
+  "trajectory": {
+    "command": "python scripts/trajectory/check_trajectory.py --physics",
+    "exit_code": 0
+  },
+  "pick_place": {
+    "command": "python scripts/task/check_pick_place.py",
+    "exit_code": 0
+  },
+  "ibvs": {
+    "command": "python scripts/task/check_ibvs.py",
+    "exit_code": 0
+  },
+  "path_planning": {
+    "command": "python scripts/path_planning/check_path_planning.py",
+    "exit_code": 0
+  }
+}

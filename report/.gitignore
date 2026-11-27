@@ -1,0 +1,6 @@
+*.log
+*.xdv
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk

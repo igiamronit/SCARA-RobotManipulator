@@ -1,0 +1,16 @@
+test_camera_mounting_error_beyond_90_degrees_diverges (__main__.IbvsChecks.test_camera_mounting_error_beyond_90_degrees_diverges)
+Lec 37 slide 12: converges only if cos(alpha) > 0. ... ok
+test_corners_match_the_projected_block (__main__.IbvsChecks.test_corners_match_the_projected_block)
+Extracted corners agree with the true top corners projected by u = lam x/z + cx. ... ok
+test_goal_file_is_up_to_date (__main__.IbvsChecks.test_goal_file_is_up_to_date) ... ok
+test_hand_eye_transform_matches_the_model (__main__.IbvsChecks.test_hand_eye_transform_matches_the_model)
+T4c used by the controller equals the camera pose in models/scara.xml. ... ok
+test_interaction_matrix_predicts_image_motion (__main__.IbvsChecks.test_interaction_matrix_predicts_image_motion)
+L xi_c matches the measured feature velocity for each camera motion. ... ok
+test_servo_then_pick_and_place (__main__.IbvsChecks.test_servo_then_pick_and_place) ... ok
+test_shifted_block_is_still_picked (__main__.IbvsChecks.test_shifted_block_is_still_picked) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 11.443s
+
+OK

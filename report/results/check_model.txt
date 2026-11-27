@@ -1,0 +1,3 @@
+PASS: MJCF and URDF load; six joint types/order correct; DH tool positions and joint directions agree.
+PASS: both gripper motors open the fingers in a 100 ms physics step check.
+This does not validate object grasp, arm trajectory tracking, or cycle throughput.

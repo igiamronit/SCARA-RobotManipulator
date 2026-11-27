@@ -63,7 +63,9 @@ class IbvsChecks(unittest.TestCase):
         lam, cx, cy = intrinsics(self.model)
         s0, z, _ = observe(self.camera, self.data)
         L = interaction_matrix(s0, z, lam, cx, cy)
-        h = .01
+        # Rendered Harris corners need a multi-pixel perturbation to avoid
+        # amplification of sub-pixel localization noise by differentiation.
+        h = .03
         for xi in np.diag([.1, .1, .1, 1.0]):
             qd = camera_to_joint_rates(xi, self.look_q)
             images = []

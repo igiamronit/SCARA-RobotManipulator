@@ -1,0 +1,16 @@
+PASS: computed_torque physics tracking (nominal); max tool error=7.59491e-05 m; final=2.99108e-08 m; no saturation.
+PASS: pd_bias physics tracking (nominal); max tool error=0.0078533 m; final=3.79291e-06 m; no saturation.
+PASS: computed_torque physics tracking (perturbed start); max tool error=0.00861259 m; final=2.99108e-08 m; no saturation.
+PASS: viewer observation and early-stop completion reporting.
+test_dense_samples_respect_limits_including_lspb_triangle (__main__.TrajectoryChecks.test_dense_samples_respect_limits_including_lspb_triangle) ... ok
+test_derivatives_from_independent_position_differences (__main__.TrajectoryChecks.test_derivatives_from_independent_position_differences) ... ok
+test_endpoints_reverse_stationary_and_holds (__main__.TrajectoryChecks.test_endpoints_reverse_stationary_and_holds) ... ok
+test_immutable_endpoints_and_disconnected_path_rejection (__main__.TrajectoryChecks.test_immutable_endpoints_and_disconnected_path_rejection) ... ok
+test_input_rejections (__main__.TrajectoryChecks.test_input_rejections) ... ok
+test_joint_angles_do_not_cross_limited_joint_wrap_boundary (__main__.TrajectoryChecks.test_joint_angles_do_not_cross_limited_joint_wrap_boundary) ... ok
+test_waypoint_joins_and_ik_branch (__main__.TrajectoryChecks.test_waypoint_joins_and_ik_branch) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.404s
+
+OK

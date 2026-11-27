@@ -1,0 +1,373 @@
+{
+  "unloaded_computed_torque": {
+    "controller": "computed_torque",
+    "mujoco_version": "3.17.0",
+    "completed": true,
+    "physics_timestep_s": 0.001,
+    "trajectory_duration_s": 7.705,
+    "simulated_duration_s": 8.705000000000615,
+    "initial_joint_offset_SI": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "feedback_gain_convention": "commanded acceleration",
+    "kp": [
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0,
+      100.0
+    ],
+    "kd": [
+      20.0,
+      20.0,
+      20.0,
+      20.0,
+      20.0,
+      20.0
+    ],
+    "max_joint_error_SI": [
+      0.00026112360699803716,
+      0.0001291497446425094,
+      2.9140586112412492e-05,
+      0.0004239043799373343
+    ],
+    "rms_joint_error_SI": [
+      9.554359371425603e-05,
+      4.0877467482843474e-05,
+      1.4292644973631088e-05,
+      0.00015639832760074975
+    ],
+    "final_joint_error_SI": [
+      -9.839654963039735e-08,
+      3.8881051489525476e-08,
+      2.895940064140401e-09,
+      -1.2671718224721573e-07
+    ],
+    "peak_effort_SI": [
+      0.44698474258875875,
+      0.10429703972231151,
+      6.153078604623367,
+      0.025187810467392765,
+      0.03607581677449795,
+      0.035901630206029475
+    ],
+    "effort_limits_SI": [
+      12.0,
+      8.0,
+      80.0,
+      2.0,
+      8.0,
+      8.0
+    ],
+    "peak_actual_velocity_SI": [
+      1.2491684987745637,
+      0.8210069714112416,
+      0.12327328445422317,
+      2.5001376873354078
+    ],
+    "peak_actual_acceleration_SI": [
+      3.5941220378555014,
+      2.372302279934679,
+      0.4166765717940635,
+      6.406047145294346
+    ],
+    "saturated_samples": 0,
+    "max_tool_position_error_m": 7.594906815981521e-05,
+    "final_tool_position_error_m": 2.991083910172333e-08,
+    "max_tool_yaw_error_rad": 0.0005674726835120936,
+    "maximum_active_contacts": 0,
+    "observed_contact_geom_id_pairs": [],
+    "model_position_limits_respected": true,
+    "scope": "Unloaded existing model. No objects, grasp/release, or collision-free certificate. Dynamics supplied by the same simulator as the plant.",
+    "actual_velocity_limits_respected": true,
+    "actual_acceleration_limits_respected": true,
+    "minimum_clearance_m": 0.006321821441151027,
+    "closest_clearance_pair": [
+      "wrist_hub",
+      "finger_left"
+    ],
+    "closest_clearance_time_s": 7.648000000000889
+  },
+  "unloaded_pd_bias": {
+    "controller": "pd_bias",
+    "mujoco_version": "3.17.0",
+    "completed": true,
+    "physics_timestep_s": 0.001,
+    "trajectory_duration_s": 7.705,
+    "simulated_duration_s": 8.705000000000615,
+    "initial_joint_offset_SI": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "feedback_gain_convention": "direct generalized force",
+    "kp": [
+      25.0,
+      12.0,
+      120.0,
+      0.8,
+      20.0,
+      20.0
+    ],
+    "kd": [
+      3.0,
+      1.0,
+      12.0,
+      0.08,
+      1.0,
+      1.0
+    ],
+    "max_joint_error_SI": [
+      0.018170531735479722,
+      0.009328126282835969,
+      0.002004006680492991,
+      0.004571553682397145
+    ],
+    "rms_joint_error_SI": [
+      0.005929795498118563,
+      0.0030580129480796657,
+      0.0009381517310128818,
+      0.001349399867384981
+    ],
+    "final_joint_error_SI": [
+      -6.825219666495297e-06,
+      -8.719177377880527e-06,
+      1.4583349645935773e-08,
+      1.7802284658086087e-06
+    ],
+    "peak_effort_SI": [
+      0.5175523685276622,
+      0.12230315256521544,
+      6.195454250863105,
+      0.025211509124817334,
+      0.04438027510550466,
+      0.04266327106667897
+    ],
+    "effort_limits_SI": [
+      12.0,
+      8.0,
+      80.0,
+      2.0,
+      8.0,
+      8.0
+    ],
+    "peak_actual_velocity_SI": [
+      1.3118194501297982,
+      0.8006843533272197,
+      0.1334237291403026,
+      2.5076107062391153
+    ],
+    "peak_actual_acceleration_SI": [
+      3.942456032641766,
+      2.3843768547959288,
+      0.4842406579690432,
+      6.459968679390352
+    ],
+    "saturated_samples": 0,
+    "max_tool_position_error_m": 0.007853299022459483,
+    "final_tool_position_error_m": 3.7929089792672543e-06,
+    "max_tool_yaw_error_rad": 0.03203610992997019,
+    "maximum_active_contacts": 0,
+    "observed_contact_geom_id_pairs": [],
+    "model_position_limits_respected": true,
+    "scope": "Unloaded existing model. No objects, grasp/release, or collision-free certificate. Dynamics supplied by the same simulator as the plant.",
+    "actual_velocity_limits_respected": true,
+    "actual_acceleration_limits_respected": true
+  },
+  "physical_pick_place": {
+    "success": true,
+    "failure": null,
+    "simulated_duration_s": 2.667999999999817,
+    "events": {
+      "grasp_s": 0.6640000000000005,
+      "lift_s": 0.9020000000000007,
+      "seat_s": 1.941999999999897,
+      "release_s": 2.061999999999884
+    },
+    "placement_error_m": 0.0007788542325753299,
+    "placement_yaw_error_rad": 5.198410630846695e-07,
+    "placement_tilt_rad": 4.712160915387242e-08,
+    "final_payload_center_m": [
+      0.2607323854557632,
+      0.14026495139319095,
+      0.03999487954755839
+    ],
+    "max_tool_error_m": 0.0010526814247740332,
+    "peak_motor_effort_SI": [
+      7.332092546831844,
+      1.4711717948090226,
+      11.384196438105187,
+      0.11615947840163085,
+      4.384726699038206,
+      4.378590946214737
+    ],
+    "saturated_samples": 0,
+    "reference_clearance": {
+      "minimum_clearance_m": 0.0060000003688036865,
+      "closest_pair": [
+        "wrist_hub",
+        "finger_left"
+      ],
+      "time_s": 1.0070000000000001,
+      "payload_obstacle_clearance_m": 0.012999999999999982
+    },
+    "measured_clearance": {
+      "minimum_clearance_m": 0.0060000003688036865,
+      "closest_pair": [
+        "wrist_hub",
+        "finger_left"
+      ],
+      "time_s": 1.1739999999999815,
+      "payload_obstacle_clearance_m": 0.011859748773277931
+    }
+  },
+  "fast_obstacle_free": [
+    {
+      "success": true,
+      "failure": null,
+      "simulated_duration_s": 1.024999999999998,
+      "events": {
+        "grasp_s": 0.3070000000000002,
+        "lift_s": 0.4950000000000004,
+        "seat_s": 0.6830000000000005,
+        "release_s": 0.7600000000000006
+      },
+      "placement_error_m": 0.000967395293434732,
+      "placement_yaw_error_rad": 0.0008375342112132422,
+      "placement_tilt_rad": 4.2146848510894035e-08,
+      "final_payload_center_m": [
+        0.2609501078621225,
+        0.14018199583802782,
+        0.03999487954755836
+      ],
+      "max_tool_error_m": 0.00035650501426112333,
+      "peak_motor_effort_SI": [
+        10.0497678303422,
+        2.0065195170737686,
+        11.494177277662368,
+        0.147457903809407,
+        4.715461710520001,
+        4.759752121336515
+      ],
+      "saturated_samples": 0,
+      "reference_clearance": {
+        "minimum_clearance_m": 0.003065681122696258,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20500000000000002,
+        "payload_obstacle_clearance_m": null
+      },
+      "measured_clearance": {
+        "minimum_clearance_m": 0.0031109637849405596,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20300000000000015,
+        "payload_obstacle_clearance_m": null
+      }
+    },
+    {
+      "success": true,
+      "failure": null,
+      "simulated_duration_s": 1.024999999999998,
+      "events": {
+        "grasp_s": 0.3070000000000002,
+        "lift_s": 0.4950000000000004,
+        "seat_s": 0.6830000000000005,
+        "release_s": 0.7600000000000006
+      },
+      "placement_error_m": 0.000967395293434732,
+      "placement_yaw_error_rad": 0.0008375342112132422,
+      "placement_tilt_rad": 4.2146848510894035e-08,
+      "final_payload_center_m": [
+        0.2609501078621225,
+        0.14018199583802782,
+        0.03999487954755836
+      ],
+      "max_tool_error_m": 0.00035650501426112333,
+      "peak_motor_effort_SI": [
+        10.0497678303422,
+        2.0065195170737686,
+        11.494177277662368,
+        0.147457903809407,
+        4.715461710520001,
+        4.759752121336515
+      ],
+      "saturated_samples": 0,
+      "reference_clearance": {
+        "minimum_clearance_m": 0.003065681122696258,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20500000000000002,
+        "payload_obstacle_clearance_m": null
+      },
+      "measured_clearance": {
+        "minimum_clearance_m": 0.0031109637849405596,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20300000000000015,
+        "payload_obstacle_clearance_m": null
+      }
+    },
+    {
+      "success": true,
+      "failure": null,
+      "simulated_duration_s": 1.024999999999998,
+      "events": {
+        "grasp_s": 0.3070000000000002,
+        "lift_s": 0.4950000000000004,
+        "seat_s": 0.6830000000000005,
+        "release_s": 0.7600000000000006
+      },
+      "placement_error_m": 0.000967395293434732,
+      "placement_yaw_error_rad": 0.0008375342112132422,
+      "placement_tilt_rad": 4.2146848510894035e-08,
+      "final_payload_center_m": [
+        0.2609501078621225,
+        0.14018199583802782,
+        0.03999487954755836
+      ],
+      "max_tool_error_m": 0.00035650501426112333,
+      "peak_motor_effort_SI": [
+        10.0497678303422,
+        2.0065195170737686,
+        11.494177277662368,
+        0.147457903809407,
+        4.715461710520001,
+        4.759752121336515
+      ],
+      "saturated_samples": 0,
+      "reference_clearance": {
+        "minimum_clearance_m": 0.003065681122696258,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20500000000000002,
+        "payload_obstacle_clearance_m": null
+      },
+      "measured_clearance": {
+        "minimum_clearance_m": 0.0031109637849405596,
+        "closest_pair": [
+          "finger_right",
+          "workpiece"
+        ],
+        "time_s": 0.20300000000000015,
+        "payload_obstacle_clearance_m": null
+      }
+    }
+  ],
+  "local_controllability_rank": 8
+}

@@ -1,0 +1,8 @@
+test_friction_grasp_and_placement (__main__.PickPlaceChecks.test_friction_grasp_and_placement) ... ok
+test_low_friction_cannot_lift_the_payload (__main__.PickPlaceChecks.test_low_friction_cannot_lift_the_payload) ... ok
+test_low_transfer_is_rejected_between_waypoints (__main__.PickPlaceChecks.test_low_transfer_is_rejected_between_waypoints) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.173s
+
+OK

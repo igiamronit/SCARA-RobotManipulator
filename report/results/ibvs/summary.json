@@ -1,0 +1,78 @@
+{
+  "nominal": {
+    "success": true,
+    "failure": null,
+    "decay_rate_per_s": 2.066017373836866,
+    "gamma": 2.0,
+    "converged": true,
+    "time_s": 2.2769999999998225,
+    "frames": 70,
+    "initial_rms_px": 98.63126822983622,
+    "final_rms_px": 0.8661867506220491,
+    "grasp_xy_error_mm": 0.08267614069074428,
+    "grasp_yaw_error_deg": 0.12705627206918144
+  },
+  "depth_x0.5": {
+    "success": true,
+    "failure": null,
+    "decay_rate_per_s": 1.0226687302777788,
+    "gamma": 2.0,
+    "converged": true,
+    "time_s": 4.322999999999892,
+    "frames": 132,
+    "initial_rms_px": 98.63126822983622,
+    "final_rms_px": 0.8661867506220491,
+    "grasp_xy_error_mm": 0.12788126801506777,
+    "grasp_yaw_error_deg": 0.022071361368230742
+  },
+  "depth_x2": {
+    "success": true,
+    "failure": null,
+    "decay_rate_per_s": 2.3983551186297225,
+    "gamma": 2.0,
+    "converged": true,
+    "time_s": 1.8809999999998661,
+    "frames": 58,
+    "initial_rms_px": 98.63126822983622,
+    "final_rms_px": 0.8887030863255057,
+    "grasp_xy_error_mm": 0.02887521296290671,
+    "grasp_yaw_error_deg": 0.27585948586165565
+  },
+  "mount_error_30deg": {
+    "success": true,
+    "failure": null,
+    "decay_rate_per_s": 1.8683833536151901,
+    "gamma": 2.0,
+    "converged": true,
+    "time_s": 2.5409999999997934,
+    "frames": 78,
+    "initial_rms_px": 98.63126822983622,
+    "final_rms_px": 0.7072331425422571,
+    "grasp_xy_error_mm": 0.14038944723110286,
+    "grasp_yaw_error_deg": 0.0502597647216297
+  },
+  "mount_error_100deg": {
+    "success": false,
+    "failure": "The block left the camera view.",
+    "decay_rate_per_s": null,
+    "gamma": 2.0,
+    "converged": false,
+    "time_s": 0.9569999999999677,
+    "frames": 30,
+    "initial_rms_px": 98.63126822983622,
+    "final_rms_px": 112.90753709120439
+  },
+  "shifted_block": {
+    "success": true,
+    "failure": null,
+    "decay_rate_per_s": 2.072468401144471,
+    "gamma": 2.0,
+    "converged": true,
+    "time_s": 2.408999999999808,
+    "frames": 74,
+    "initial_rms_px": 96.59558751107598,
+    "final_rms_px": 0.8795604508491104,
+    "grasp_xy_error_mm": 0.07493276631207886,
+    "grasp_yaw_error_deg": 0.0505442911595633
+  }
+}

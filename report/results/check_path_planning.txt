@@ -1,0 +1,10 @@
+test_detour_and_reproducibility (__main__.PathPlanningChecks.test_detour_and_reproducibility) ... ok
+test_edge_checks_interior_not_only_endpoints (__main__.PathPlanningChecks.test_edge_checks_interior_not_only_endpoints) ... ok
+test_free_direct_and_invalid_endpoints (__main__.PathPlanningChecks.test_free_direct_and_invalid_endpoints) ... ok
+test_loaded_scara_direct_fails_rrt_and_dense_recheck_pass (__main__.PathPlanningChecks.test_loaded_scara_direct_fails_rrt_and_dense_recheck_pass) ... ok
+test_real_grasp_and_full_task (__main__.PathPlanningChecks.test_real_grasp_and_full_task) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 3.043s
+
+OK

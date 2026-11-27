@@ -1,0 +1,5 @@
+Parameters: r1=0.120 m, r2=0.090 m, mu=m3+m4=0.600 kg, I1..I4=(6.00e-03, 2.50e-03, 1.00e-04, 5.23e-04) kg m^2
+PASS: D(q) symmetric positive definite; C from Christoffel symbols; D_dot - 2C skew-symmetric.
+PASS: G(q) = dP/dq; static holding effort F3 = -mu g.
+PASS: D, C qd + G and inverse dynamics match MuJoCo qM / qfrc_bias / mj_inverse at 3 grip openings.
+PASS: forward dynamics inverts inverse dynamics; unforced energy drift 8.3e-13 J over 1 s.
